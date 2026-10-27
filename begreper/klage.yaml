@@ -1,0 +1,25 @@
+# Begrep: klage
+# Valideres mot ForvaltetBegrep i modeller/tverrgaende/begrepsforvaltning.yaml
+id: https://example.org/begrep/klage
+identifikator:
+- https://example.org/begrep/klage
+anbefalt_term:
+  nb: klage
+  nn: klage
+definisjon:
+- tekst:
+    nb: søknad om at et vedtak blir vurdert på nytt
+  forhold_til_kilde: self-composed
+- tekst:
+    nn: søknad om at eit vedtak blir vurdert på nytt
+kontaktpunkt:
+- epost: mailto:begrep@example.org
+utgiver: https://data.brreg.no/enhetsregisteret/api/enheter/999000222
+status: CANDIDATE
+har_generisk_begrepsrelasjon:
+- overbegrep:
+  - https://example.org/begrep/soknad
+er_relatert_til:
+- https://example.org/begrep/vedtak
+fagansvarlig: fagansvarlig:kari-nordmann
+sist_endret: "2026-10-01"

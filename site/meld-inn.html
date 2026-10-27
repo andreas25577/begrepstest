@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="no" data-color-scheme="light" data-size="md">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meld inn begrep</title>
+<link rel="stylesheet" href="vendor/smudi/styles.css">
+<link rel="stylesheet" href="forvaltning.css">
+</head>
+<body>
+<header class="topp">
+  <div class="topp-innhold">
+    <a class="topp-navn" href="index.html">Begreper og modeller</a>
+    <nav aria-label="Hovedmeny">
+      <a class="ds-link" href="index.html">Modelloversikt</a>
+      <a class="ds-link" href="mine-begreper.html">Mine begreper</a>
+      <a class="ds-link" href="meld-inn.html" aria-current="page">Meld inn begrep</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="stabel">
+    <h1 class="ds-heading" data-size="lg">Meld inn et nytt begrep</h1>
+    <p class="ds-paragraph ingress">Mangler vi et begrep, eller brukes et ord på flere måter? Fortell oss hva det betyr og hvorfor vi trenger det. Du trenger ikke kunne skrive en definisjon. Det gjør den fagansvarlige sammen med deg.</p>
+  </div>
+
+  <div class="to-kol">
+    <form id="skjema" novalidate>
+      <div id="feil" tabindex="-1"></div>
+      <div id="felter"></div>
+      <div class="handlinger">
+        <button class="ds-button" data-variant="primary" type="submit">Se over og send inn</button>
+        <button class="ds-button" data-variant="secondary" type="reset">Tøm skjemaet</button>
+      </div>
+    </form>
+
+    <aside class="klistret stabel" aria-labelledby="lagring-tittel">
+      <div class="ds-card" data-variant="tinted">
+        <h2 class="ds-heading" data-size="xs" id="lagring-tittel">Slik blir forslaget lagret</h2>
+        <p class="ds-paragraph" data-size="sm">Skjemaet fyller ut et <span class="kode">Begrepsforslag</span> i modellen. Når forslaget er avklart, overføres feltene til et nytt begrep etter SKOS-AP-NO.</p>
+        <div class="rull"><table class="ds-table mapping" data-size="sm">
+          <thead><tr><th>Skjemafelt</th><th>I forslaget</th><th>Blir i begrepet</th></tr></thead>
+          <tbody id="mapping"></tbody>
+        </table></div>
+      </div>
+      <details class="ds-details" data-variant="tinted">
+        <summary>Vis forslaget som YAML</summary>
+        <div><pre class="yaml" id="yaml"></pre></div>
+      </details>
+    </aside>
+  </div>
+
+  <section id="ferdig" hidden aria-live="polite"></section>
+</main>
+
+<script type="module">
+import { $, $$, esc, idag, slug, lastData, valider, tilYaml, rens, issueTekst, issueLenke, feiloppsummering, kopierKnapp, term } from "./forvaltning.js";
+
+const { fv, skjemaForslag, config } = await lastData();
+const mapping = Object.fromEntries(fv.mapping.map((m) => [m.slot, m]));
+const BEGREPSNAVN = {
+  "anbefalt_term.nb": "anbefalt term (bokmål)", "merknad.nb": "merknad", "definisjon[0].tekst.nb": "definisjon (bokmål)",
+  "definisjon[0].kilde": "kilde til definisjonen", "eksempel.nb": "eksempel", "er_relatert_til": "er relatert til",
+  "fagansvarlig": "fagansvarlig", "": "blir bare i forslaget",
+};
+const flerlinje = new Set(["forklaring", "behov", "forslag_til_definisjon", "brukseksempel"]);
+
+// --- Skjemaet bygges fra mappingen i modellen ---------------------------------
+const feltHtml = (m) => {
+  const id = `f-${m.slot}`;
+  const merke = m.paakrevd ? "" : ` <span class="dempet liten">(valgfritt)</span>`;
+  const label = `<label class="ds-label" for="${id}" data-weight="medium">${esc(m.skjemafelt)}${merke}</label>`;
+  const beskr = m.beskrivelse ? `<div data-field="description" id="${id}-beskr">${esc(m.beskrivelse)}</div>` : "";
+  const melding = `<div class="ds-validation-message" data-field="validation" id="${id}-feil" hidden></div>`;
+  if (m.slot === "ligner_pa") {
+    const valg = fv.begreper.map((b) => `<label class="ds-chip"><input type="checkbox" name="ligner_pa" value="${esc(b.id)}">${esc(term(b))}</label>`).join("");
+    return `<fieldset class="ds-fieldset" id="${id}"><legend class="ds-label" data-weight="medium">${esc(m.skjemafelt)}${merke}</legend>
+      <p data-field="description">${esc(m.beskrivelse)}</p><div class="chip-valg">${valg}</div></fieldset>`;
+  }
+  if (m.slot === "foreslatt_fagansvarlig") {
+    const valg = fv.fagansvarlige.map((p) => `<option value="${esc(p.id)}">${esc(p.navn)} – ${esc(p.seksjon)}</option>`).join("");
+    return `<div class="ds-field">${label}<div data-field="description">Velg «Vet ikke» hvis du er usikker. Begrepsforvaltningen fordeler forslaget.</div>
+      <select class="ds-input" id="${id}" name="${m.slot}"><option value="">Vet ikke</option>${valg}</select>${melding}</div>`;
+  }
+  if (m.slot === "innmeldt_av") {
+    const del = (n, lbl, type, auto) => `<div class="ds-field"><label class="ds-label" for="f-innmeldt_av-${n}">${lbl}</label>
+      <input class="ds-input" id="f-innmeldt_av-${n}" name="innmeldt_av.${n}" type="${type}" autocomplete="${auto}">
+      <div class="ds-validation-message" data-field="validation" id="f-innmeldt_av-${n}-feil" hidden></div></div>`;
+    return `<fieldset class="ds-fieldset" id="${id}"><legend class="ds-label" data-weight="medium">${esc(m.skjemafelt)}</legend>
+      <p data-field="description">Så den fagansvarlige kan ta kontakt.</p>
+      ${del("navn", "Navn", "text", "name")}${del("epost", "E-post", "email", "email")}${del("seksjon", "Seksjon <span class=\"dempet liten\">(valgfritt)</span>", "text", "organization-title")}</fieldset>`;
+  }
+  const inn = flerlinje.has(m.slot)
+    ? `<textarea class="ds-input" id="${id}" name="${m.slot}" rows="3" aria-describedby="${id}-beskr"></textarea>`
+    : `<input class="ds-input" id="${id}" name="${m.slot}" type="${m.slot === "kilde" ? "url" : "text"}" aria-describedby="${id}-beskr" ${m.slot === "kilde" ? 'placeholder="https://lovdata.no/…"' : ""}>`;
+  const dupl = m.slot === "foreslatt_term" ? `<div id="duplikat" aria-live="polite"></div>` : "";
+  return `<div class="ds-field">${label}${beskr}${inn}${melding}${dupl}</div>`;
+};
+$("#felter").innerHTML = fv.mapping.map(feltHtml).join("");
+
+$("#mapping").innerHTML = fv.mapping.map((m) => `<tr data-slot="${esc(m.slot)}">
+  <td>${esc(m.skjemafelt)}</td><td>${esc(m.slot)}</td>
+  <td>${m.overfores_til ? `${esc(BEGREPSNAVN[m.overfores_til] ?? m.overfores_til)}` : `<span class="dempet">${esc(BEGREPSNAVN[""])}</span>`}</td></tr>`).join("");
+
+// --- Lag forslaget fra skjemaet ------------------------------------------------
+function lesSkjema() {
+  const v = (n) => ($(`[name="${n}"]`)?.value ?? "").trim();
+  const t = v("foreslatt_term");
+  const epost = v("innmeldt_av.epost");
+  return rens({
+    id: `forslag:${idag()}-${slug(t) || "uten-navn"}`,
+    foreslatt_term: t,
+    forklaring: v("forklaring"),
+    behov: v("behov"),
+    forslag_til_definisjon: v("forslag_til_definisjon"),
+    kilde: v("kilde") ? [v("kilde")] : [],
+    brukseksempel: v("brukseksempel"),
+    ligner_pa: $$('input[name="ligner_pa"]:checked').map((x) => x.value),
+    foreslatt_fagansvarlig: v("foreslatt_fagansvarlig"),
+    innmeldt_av: { navn: v("innmeldt_av.navn"), epost: epost ? (epost.startsWith("mailto:") ? epost : `mailto:${epost}`) : "", seksjon: v("innmeldt_av.seksjon") },
+    opprettet: idag(),
+    forslagsstatus: "innmeldt",
+  });
+}
+
+function oppdaterForhandsvisning() {
+  const f = lesSkjema();
+  $("#yaml").textContent = tilYaml(f);
+  $$("#mapping tr").forEach((tr) => (tr.dataset.utfylt = f[tr.dataset.slot] !== undefined ? "ja" : "nei"));
+}
+
+// --- Finnes begrepet allerede? -----------------------------------------------------
+const norm = (s) => String(s ?? "").toLowerCase().trim();
+function finnLike(t) {
+  const n = norm(t);
+  if (n.length < 3) return [];
+  const treff = [];
+  for (const b of fv.begreper) {
+    const termer = [b.anbefalt_term?.nb, b.anbefalt_term?.nn, b.anbefalt_term?.en, ...(b.tillatt_term?.nb ?? []), ...(b.tillatt_term?.nn ?? [])].filter(Boolean);
+    const hit = termer.find((x) => norm(x) === n || norm(x).startsWith(n) || n.startsWith(norm(x)));
+    if (hit) treff.push({ type: "begrep", tekst: term(b), via: norm(hit) !== norm(term(b)) ? hit : null, id: b.id, status: b.status });
+  }
+  for (const f of fv.forslag) {
+    if (["avvist"].includes(f.forslagsstatus)) continue;
+    if (norm(f.foreslatt_term).startsWith(n) || n.startsWith(norm(f.foreslatt_term))) treff.push({ type: "forslag", tekst: f.foreslatt_term, status: f.forslagsstatus });
+  }
+  return treff;
+}
+$('[name="foreslatt_term"]').addEventListener("input", (e) => {
+  const treff = finnLike(e.target.value);
+  $("#duplikat").innerHTML = treff.length ? `<div class="ds-alert" data-color="warning" style="margin-top: var(--ds-size-3)">
+    <h3 class="ds-heading" data-size="2xs">Finnes dette allerede?</h3>
+    <ul class="ds-list">${treff.map((x) => x.type === "begrep"
+      ? `<li><b>${esc(x.tekst)}</b>${x.via ? ` (har «${esc(x.via)}» som tillatt term)` : ""} er et begrep i katalogen.</li>`
+      : `<li>«${esc(x.tekst)}» er allerede meldt inn og har status ${esc(x.status.replace("_", " "))}.</li>`).join("")}</ul>
+    <p class="ds-paragraph" data-size="sm">Er det noe annet du mener, så meld det inn og huk av for det under «Ligner på».</p></div>` : "";
+  treff.filter((x) => x.type === "begrep").forEach((x) => { const c = $(`input[name="ligner_pa"][value="${CSS.escape(x.id)}"]`); if (c) c.dataset.foreslatt = "ja"; });
+});
+
+$("#skjema").addEventListener("input", oppdaterForhandsvisning);
+$("#skjema").addEventListener("reset", () => setTimeout(() => { oppdaterForhandsvisning(); $("#duplikat").innerHTML = ""; $("#feil").innerHTML = ""; $("#ferdig").hidden = true; }));
+oppdaterForhandsvisning();
+
+// --- Send inn ---------------------------------------------------------------------
+function feltFor(sti) {
+  const deler = sti.split("/").filter(Boolean);
+  const slot = deler[0], under = deler[1];
+  const id = under && slot === "innmeldt_av" ? `f-innmeldt_av-${under}` : `f-${slot}`;
+  const navn = under && slot === "innmeldt_av" ? { navn: "Navn", epost: "E-post", seksjon: "Seksjon" }[under] : mapping[slot]?.skjemafelt ?? slot;
+  return document.getElementById(id) ? { id, navn: `«${navn}»` } : null;
+}
+
+$("#skjema").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const forslag = lesSkjema();
+  let feil = valider(forslag, skjemaForslag);
+  // E-post: modellen krever mailto:, men brukeren skriver bare adressen
+  feil = feil.map((x) => (x.sti === "/innmeldt_av/epost" && x.melding === "har feil format" ? { ...x, melding: "må være en e-postadresse" } : x));
+  $$(".ds-input").forEach((i) => i.removeAttribute("aria-invalid"));
+  $$(".ds-validation-message").forEach((m) => (m.hidden = true));
+  for (const x of feil) {
+    const f = feltFor(x.sti); if (!f) continue;
+    const inn = document.getElementById(f.id);
+    inn.setAttribute("aria-invalid", "true");
+    const m = document.getElementById(`${f.id}-feil`);
+    if (m) { m.textContent = `${f.navn.replace(/[«»]/g, "")} ${x.melding}.`; m.hidden = false; }
+  }
+  $("#feil").innerHTML = feiloppsummering(feil, feltFor);
+  if (feil.length) { $("#feil .ds-error-summary").focus(); $("#ferdig").hidden = true; return; }
+  visFerdig(forslag);
+});
+
+function visFerdig(forslag) {
+  const fil = `forslag/${forslag.id.split(":")[1]}.yaml`;
+  const yaml = `# Begrepsforslag. Valideres mot Begrepsforslag i modeller/tverrgaende/begrepsforvaltning.yaml\n${tilYaml(forslag)}\n`;
+  const eier = fv.fagansvarlige.find((p) => p.id === forslag.foreslatt_fagansvarlig);
+  const tekst = issueTekst({
+    type: "Nytt begrepsforslag",
+    oppsummering: `**${forslag.foreslatt_term}** er meldt inn av ${forslag.innmeldt_av.navn}.${eier ? ` Foreslått fagansvarlig: ${eier.navn}.` : " Ingen fagansvarlig er foreslått."}\n\n> ${forslag.forklaring}`,
+    filer: [{ fil, yaml }],
+  });
+  const lenke = issueLenke(config, `Begrepsforslag: ${forslag.foreslatt_term}`, tekst);
+  const s = $("#ferdig");
+  s.hidden = false;
+  s.innerHTML = `<div class="ds-card">
+    <h2 class="ds-heading" data-size="sm">Forslaget er klart til å sendes inn</h2>
+    <div class="ds-alert" data-color="success"><p class="ds-paragraph">«${esc(forslag.foreslatt_term)}» følger modellen for begrepsforslag.</p></div>
+    <p class="ds-paragraph">Når du sender inn, åpnes et ferdig utfylt saksskjema i GitHub. Trykk «Submit new issue» der. Forslaget blir da en endring i repoet, sjekkes automatisk mot modellen og sendes til ${eier ? esc(eier.navn) : "begrepsforvaltningen"}.</p>
+    ${lenke ? "" : `<div class="ds-alert" data-color="info"><p class="ds-paragraph">Siden er ikke koblet til et GitHub-repo her, så du kan ikke sende direkte. Kopier YAML-en og legg den i <span class="kode">${esc(fil)}</span>.</p></div>`}
+    <p class="ds-paragraph dempet liten">Lagres som <span class="kode">${esc(fil)}</span></p>
+    <pre class="yaml">${esc(yaml)}</pre>
+    <div class="handlinger" id="ferdig-knapper">
+      ${lenke ? `<a class="ds-button" data-variant="primary" href="${esc(lenke)}" target="_blank" rel="noopener">Send inn i GitHub</a>` : ""}
+    </div></div>`;
+  $("#ferdig-knapper").appendChild(kopierKnapp(yaml));
+  s.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+</script>
+</body>
+</html>

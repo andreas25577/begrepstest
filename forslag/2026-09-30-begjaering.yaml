@@ -1,0 +1,15 @@
+# Begrepsforslag. Valideres mot Begrepsforslag i modeller/tverrgaende/begrepsforvaltning.yaml
+id: forslag:2026-09-30-begjaering
+foreslatt_term: begjæring
+forklaring: Når noen ber oss om noe skriftlig.
+behov: Står i gamle brevmaler.
+ligner_pa:
+- https://example.org/begrep/soknad
+innmeldt_av:
+  navn: Per Olsen
+  epost: mailto:per.olsen@example.org
+  seksjon: Seksjon for saksbehandlingsstøtte
+opprettet: "2026-09-30"
+forslagsstatus: duplikat
+duplikat_av: https://example.org/begrep/soknad
+behandlingskommentar: «begjæring» er allerede tillatt term for søknad.

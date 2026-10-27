@@ -1,0 +1,59 @@
+id: https://example.org/modeller/statistikk
+name: statistikk
+title: Statistikk
+description: Informasjonsmodell for statistikkserier som publiseres som datasett.
+version: 0.2.0
+status: linkml:testing
+annotations:
+  lag: fag
+  eier: Seksjon for analyse
+
+prefixes:
+  linkml: https://w3id.org/linkml/
+  stat: https://example.org/modeller/statistikk/
+  begrep: https://example.org/begrep/
+
+default_prefix: stat
+default_range: string
+
+imports:
+  - linkml:types
+  - ../kjerne/kjerne_typer
+  - ../kjerne/kjerne_kodelister
+  - ../tverrgaende/dcat_ap_no_lett
+
+classes:
+
+  Statistikkserie:
+    description: En tidsserie med nøkkeltall som publiseres jevnlig.
+    slots: [id, tittel, datasett, frekvens, endret_dato, maaltall]
+    slot_usage:
+      tittel: {required: true}
+      frekvens:
+        required: true
+        description: Statistikk publiseres ikke daglig.
+        equals_string_in: [maanedlig, kvartalsvis, aarlig]
+
+  Maaltall:
+    description: Én verdi for én periode.
+    slots: [periode, antall_soknader, median_behandlingstid]
+
+slots:
+  datasett:
+    range: Datasett
+    inlined: false
+    description: Datasettet serien publiseres i.
+  maaltall:
+    range: Maaltall
+    multivalued: true
+    inlined_as_list: true
+  periode:
+    required: true
+    pattern: "^[0-9]{4}(-(0[1-9]|1[0-2]|Q[1-4]))?$"
+  antall_soknader:
+    range: integer
+    exact_mappings: [begrep:soknad]
+  median_behandlingstid:
+    range: integer
+    description: Median saksbehandlingstid i dager.
+    exact_mappings: [begrep:saksbehandlingstid]

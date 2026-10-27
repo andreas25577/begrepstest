@@ -1,0 +1,20 @@
+# Begrep: henvendelse
+# Valideres mot ForvaltetBegrep i modeller/tverrgaende/begrepsforvaltning.yaml
+id: https://example.org/begrep/henvendelse
+identifikator:
+- https://example.org/begrep/henvendelse
+anbefalt_term:
+  nb: henvendelse
+  nn: førespurnad
+definisjon:
+- tekst:
+    nb: skriftlig eller muntlig kontakt med en offentlig virksomhet
+  forhold_til_kilde: self-composed
+- tekst:
+    nn: skriftleg eller munnleg kontakt med ei offentleg verksemd
+kontaktpunkt:
+- epost: mailto:begrep@example.org
+utgiver: https://data.brreg.no/enhetsregisteret/api/enheter/999000222
+status: DRAFT
+fagansvarlig: fagansvarlig:ingrid-berg
+sist_endret: "2026-10-01"

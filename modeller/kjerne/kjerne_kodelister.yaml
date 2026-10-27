@@ -1,0 +1,54 @@
+id: https://example.org/modeller/kjerne_kodelister
+name: kjerne_kodelister
+title: Kjerne – felles kodelister
+description: Kodelister som brukes på tvers av modellene.
+version: 1.0.0
+status: linkml:testing
+annotations:
+  lag: kjerne
+  eier: Seksjon for informasjonsforvaltning
+
+prefixes:
+  linkml: https://w3id.org/linkml/
+  kjerne: https://example.org/modeller/kjerne/
+  eutilgang: http://publications.europa.eu/resource/authority/access-right/
+  eufrekvens: http://publications.europa.eu/resource/authority/frequency/
+  begrep: https://example.org/begrep/
+
+default_prefix: kjerne
+
+imports:
+  - linkml:types
+
+slots:
+  tilgangsniva:
+    description: Hvem som kan få tilgang til ressursen.
+    range: Tilgangsniva
+    slot_uri: http://purl.org/dc/terms/accessRights
+    exact_mappings: [begrep:tilgangsniva]
+  frekvens:
+    description: Hvor ofte ressursen oppdateres.
+    range: Frekvens
+    slot_uri: http://purl.org/dc/terms/accrualPeriodicity
+
+enums:
+
+  Tilgangsniva:
+    description: Hvem som har tilgang. Tilsvarer EUs kodeliste for tilgangsrettigheter.
+    permissible_values:
+      offentlig:
+        meaning: eutilgang:PUBLIC
+      begrenset:
+        meaning: eutilgang:RESTRICTED
+      ikke_offentlig:
+        meaning: eutilgang:NON_PUBLIC
+
+  Frekvens:
+    description: Hvor ofte noe oppdateres. Utvalg fra EUs frekvensliste.
+    permissible_values:
+      daglig: {meaning: eufrekvens:DAILY}
+      ukentlig: {meaning: eufrekvens:WEEKLY}
+      maanedlig: {meaning: eufrekvens:MONTHLY}
+      kvartalsvis: {meaning: eufrekvens:QUARTERLY}
+      aarlig: {meaning: eufrekvens:ANNUAL}
+      uregelmessig: {meaning: eufrekvens:IRREG}

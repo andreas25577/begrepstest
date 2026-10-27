@@ -1,0 +1,20 @@
+# Begrep: tilgangsnivå
+# Valideres mot ForvaltetBegrep i modeller/tverrgaende/begrepsforvaltning.yaml
+id: https://example.org/begrep/tilgangsniva
+identifikator:
+- https://example.org/begrep/tilgangsniva
+anbefalt_term:
+  nb: tilgangsnivå
+  nn: tilgangsnivå
+definisjon:
+- tekst:
+    nb: angivelse av hvem som kan få tilgang til en ressurs
+  forhold_til_kilde: self-composed
+- tekst:
+    nn: angiving av kven som kan få tilgang til ein ressurs
+kontaktpunkt:
+- epost: mailto:begrep@example.org
+utgiver: https://data.brreg.no/enhetsregisteret/api/enheter/999000222
+status: CURRENT
+fagansvarlig: fagansvarlig:ingrid-berg
+sist_endret: "2026-10-01"

@@ -1,0 +1,195 @@
+id: https://example.org/modeller/begrepsforvaltning
+name: begrepsforvaltning
+title: Begrepsforvaltning (lokal profil)
+description: >-
+  Lokal utvidelse av SKOS-AP-NO-Begrep for den daglige forvaltningen:
+  hvem som er fagansvarlig for et begrep, og hvordan nye begreper meldes inn
+  og avklares før de blir definert. Utvidelsene ligger i eget navnerom og
+  endrer ikke SKOS-AP-NO. Et ForvaltetBegrep er fortsatt et gyldig SKOS-AP-NO-begrep.
+version: 0.1.0
+status: linkml:testing
+annotations:
+  lag: tverrgaende
+  eier: Seksjon for informasjonsforvaltning
+
+prefixes:
+  linkml: https://w3id.org/linkml/
+  skos: http://www.w3.org/2004/02/skos/core#
+  dct: http://purl.org/dc/terms/
+  prov: http://www.w3.org/ns/prov#
+  forv: https://example.org/modeller/begrepsforvaltning/
+  fagansvarlig: https://example.org/fagansvarlig/
+  forslag: https://example.org/begrepsforslag/
+  begrep: https://example.org/begrep/
+
+default_prefix: forv
+default_range: string
+
+imports:
+  - linkml:types
+  - ../kjerne/kjerne_typer
+  - ../kjerne/kjerne_kontakt
+  - skos_ap_no_begrep
+
+classes:
+
+  ForvaltetBegrep:
+    is_a: Begrep
+    class_uri: skos:Concept
+    description: >-
+      Et begrep slik vi forvalter det: alt fra SKOS-AP-NO, pluss hvem som er
+      fagansvarlig. Lagres som én fil per begrep i mappen begreper/.
+    slots:
+      - fagansvarlig
+    slot_usage:
+      fagansvarlig:
+        required: true
+
+  Fagansvarlig:
+    description: >-
+      En person som har det faglige ansvaret for ett eller flere begreper.
+      Godkjenner endringer og avklarer nye forslag.
+    slots: [id, navn, epost, seksjon, github_bruker]
+    slot_usage:
+      navn: {required: true}
+      seksjon: {required: true}
+
+  Fagansvarligregister:
+    tree_root: true
+    description: Listen over fagansvarlige. Lagres i forvaltning/fagansvarlige.yaml.
+    attributes:
+      fagansvarlige:
+        range: Fagansvarlig
+        multivalued: true
+        inlined_as_list: true
+
+  Innmelder:
+    description: Den som meldte inn et forslag.
+    slots: [navn, epost, seksjon]
+    slot_usage:
+      navn: {required: true}
+      epost: {required: true}
+
+  Begrepsforslag:
+    class_uri: forv:Begrepsforslag
+    description: >-
+      Et forslag til nytt begrep, meldt inn av hvem som helst. Forslaget er ikke
+      et begrep ennå. Når det er avklart, opprettes et ForvaltetBegrep med status
+      DRAFT, og feltene overføres slik annotasjonen «overfores_til» viser.
+      Lagres som én fil per forslag i mappen forslag/.
+    slots:
+      - id
+      - foreslatt_term
+      - forklaring
+      - behov
+      - forslag_til_definisjon
+      - kilde
+      - brukseksempel
+      - ligner_pa
+      - foreslatt_fagansvarlig
+      - innmeldt_av
+      - opprettet
+      - forslagsstatus
+      - behandlingskommentar
+      - duplikat_av
+      - resultat_begrep
+    slot_usage:
+      kilde:
+        annotations: {skjemafelt: "Kilde", overfores_til: "definisjon[0].kilde"}
+      opprettet:
+        required: true
+        description: Datoen forslaget ble meldt inn.
+    rules:
+      - description: Et forslag som er duplikat, må peke til begrepet det er duplikat av.
+        preconditions:
+          slot_conditions:
+            forslagsstatus: {equals_string: duplikat}
+        postconditions:
+          slot_conditions:
+            duplikat_av: {required: true}
+      - description: Et forslag som er opprettet som begrep, må peke til det nye begrepet.
+        preconditions:
+          slot_conditions:
+            forslagsstatus: {equals_string: opprettet}
+        postconditions:
+          slot_conditions:
+            resultat_begrep: {required: true}
+
+slots:
+
+  fagansvarlig:
+    slot_uri: prov:qualifiedAttribution
+    range: Fagansvarlig
+    inlined: false
+    description: Fagansvarlig for begrepet. Viser til en person i forvaltning/fagansvarlige.yaml.
+  navn:
+    slot_uri: http://xmlns.com/foaf/0.1/name
+  seksjon:
+    description: Seksjonen personen hører til.
+  github_bruker:
+    description: >-
+      Brukernavn på GitHub. Brukes til å be den fagansvarlige om å godkjenne
+      endringer i pull requests.
+    pattern: "^[A-Za-z0-9-]+$"
+
+  foreslatt_term:
+    required: true
+    description: Ordet eller uttrykket som foreslås.
+    annotations: {skjemafelt: "Begrepet", overfores_til: "anbefalt_term.nb"}
+  forklaring:
+    required: true
+    description: Hva betyr begrepet, forklart med egne ord.
+    annotations: {skjemafelt: "Hva betyr det?", overfores_til: "merknad.nb"}
+  behov:
+    required: true
+    description: Hvorfor trengs begrepet, og hvor brukes det.
+    annotations: {skjemafelt: "Hvorfor trenger vi det?", overfores_til: ""}
+  forslag_til_definisjon:
+    description: Et forslag til formell definisjon, hvis innmelderen har et.
+    annotations: {skjemafelt: "Forslag til definisjon", overfores_til: "definisjon[0].tekst.nb"}
+  brukseksempel:
+    description: Et eksempel på hvordan begrepet brukes.
+    annotations: {skjemafelt: "Eksempel på bruk", overfores_til: "eksempel.nb"}
+  ligner_pa:
+    range: ForvaltetBegrep
+    multivalued: true
+    inlined: false
+    description: Eksisterende begreper som ligner, eller som forslaget kan forveksles med.
+    annotations: {skjemafelt: "Ligner på", overfores_til: "er_relatert_til"}
+  foreslatt_fagansvarlig:
+    range: Fagansvarlig
+    inlined: false
+    annotations: {skjemafelt: "Hvem bør eie begrepet?", overfores_til: "fagansvarlig"}
+  innmeldt_av:
+    range: Innmelder
+    inlined: true
+    required: true
+    slot_uri: prov:wasAttributedTo
+    annotations: {skjemafelt: "Om deg", overfores_til: ""}
+  forslagsstatus:
+    range: Forslagsstatus
+    required: true
+  behandlingskommentar:
+    description: Begrunnelse fra den fagansvarlige, f.eks. hvorfor forslaget ble avvist.
+  duplikat_av:
+    range: ForvaltetBegrep
+    inlined: false
+  resultat_begrep:
+    range: ForvaltetBegrep
+    inlined: false
+    slot_uri: prov:generated
+
+enums:
+  Forslagsstatus:
+    description: Hvor forslaget er i avklaringen.
+    permissible_values:
+      innmeldt:
+        description: Nytt forslag som ingen har sett på ennå.
+      under_avklaring:
+        description: Den fagansvarlige jobber med forslaget.
+      avvist:
+        description: Det er ikke behov for begrepet. Begrunnelse står i behandlingskommentar.
+      duplikat:
+        description: Begrepet finnes allerede.
+      opprettet:
+        description: Forslaget er blitt et begrep med status DRAFT.

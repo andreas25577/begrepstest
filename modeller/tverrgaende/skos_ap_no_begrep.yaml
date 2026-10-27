@@ -1,0 +1,482 @@
+id: https://example.org/modeller/skos_ap_no_begrep
+name: skos_ap_no_begrep
+title: SKOS-AP-NO-Begrep
+description: >-
+  LinkML-modell av Digdirs SKOS-AP-NO-Begrep, versjon 2.0.x. Klasser og
+  egenskaper har samme URI som i spesifikasjonen. Kravnivå og kardinalitet
+  står i annotasjonene «kravniva» og «kardinalitet».
+version: 1.0.0
+status: linkml:testing
+license: CC-BY-4.0
+see_also:
+  - https://data.norge.no/specification/skos-ap-no-begrep
+annotations:
+  lag: tverrgaende
+  eier: Seksjon for informasjonsforvaltning
+
+prefixes:
+  linkml: https://w3id.org/linkml/
+  skos: http://www.w3.org/2004/02/skos/core#
+  skosno: https://data.norge.no/vocabulary/skosno#
+  euvoc: http://publications.europa.eu/ontology/euvoc#
+  xkos: http://rdf-vocabulary.ddialliance.org/xkos#
+  uneskos: http://purl.org/umu/uneskos#
+  dct: http://purl.org/dc/terms/
+  dcat: http://www.w3.org/ns/dcat#
+  org: http://www.w3.org/ns/org#
+  adms: http://www.w3.org/ns/adms#
+  owl: http://www.w3.org/2002/07/owl#
+  rdf: http://www.w3.org/1999/02/22-rdf-syntax-ns#
+  rdfs: http://www.w3.org/2000/01/rdf-schema#
+  conceptstatus: http://publications.europa.eu/resource/authority/concept-status/
+  kildetype: https://data.norge.no/vocabulary/relationship-with-source-type#
+  malgruppe: https://data.norge.no/vocabulary/audience-type#
+  skosap: https://example.org/modeller/skos_ap_no_begrep/
+
+default_prefix: skosap
+default_range: string
+
+imports:
+  - linkml:types
+  - ../kjerne/kjerne_typer
+  - ../kjerne/kjerne_kontakt
+
+# ---------------------------------------------------------------------------
+# KLASSER
+# ---------------------------------------------------------------------------
+classes:
+
+  # --- Rotobjekt. Er ikke en del av spesifikasjonen. -------------------------
+  Begrepsfil:
+    description: >-
+      Beholder for én datafil, slik at begreper og samlinger kan ligge i
+      samme YAML-fil. Klassen er ikke en del av SKOS-AP-NO.
+    tree_root: true
+    attributes:
+      begreper:
+        range: Begrep
+        multivalued: true
+        inlined_as_list: true
+      samlinger:
+        range: Begrepssamling
+        multivalued: true
+        inlined_as_list: true
+
+  # --- 3.5 Begrep (skos:Concept) ------------------------------------------
+  Begrep:
+    description: Et begrep, dvs. en kunnskapsenhet som består av en unik kombinasjon av kjennetegn.
+    class_uri: skos:Concept
+    annotations: {kravniva: obligatorisk}
+    slots:
+      - id
+      # obligatoriske
+      - anbefalt_term
+      - definisjon
+      - identifikator
+      - kontaktpunkt
+      - utgiver
+      # anbefalte
+      - ansvarlig_virksomhet
+      - gyldig_fra
+      - gyldig_til
+      - opprettet
+      - sist_endret
+      - fagomrade
+      - merknad
+      - tillatt_term
+      # valgfrie
+      - datastrukturterm
+      - eksempel
+      - er_del_av
+      - er_erstattet_av
+      - er_fra_begrep_i
+      - er_relatert_til
+      - erstatter
+      - frarad_term
+      - generaliserer
+      - har_eksakt_samsvar_med
+      - har_generisk_begrepsrelasjon
+      - har_naert_samsvar_med
+      - har_partitiv_begrepsrelasjon
+      - inneholder
+      - inngar_i_begrepssamling
+      - se_ogsa
+      - spesialiserer
+      - status
+      - verdiomrade
+      - versjonsnummer
+      - versjonsnote
+    slot_usage:
+      kontaktpunkt: {required: true, annotations: {kravniva: obligatorisk, kardinalitet: "1..n"}}
+      utgiver: {required: true, annotations: {kravniva: obligatorisk, kardinalitet: "1..1"}}
+
+  # --- 3.6 Definisjon (euvoc:XlNote) --------------------------------------
+  Definisjon:
+    description: >-
+      En definisjon av begrepet, med kilde og målgruppe. Ett definisjonsobjekt
+      har én tekst på ett skriftspråk (rdf:value 1..1).
+    class_uri: euvoc:XlNote
+    annotations: {kravniva: anbefalt}
+    slots:
+      - tekst
+      - forhold_til_kilde
+      - kilde
+      - malgruppe
+
+  # --- 3.7 Assosiativ begrepsrelasjon -------------------------------------
+  AssosiativBegrepsrelasjon:
+    description: >-
+      En relasjon mellom begreper som verken er generisk eller partitiv,
+      f.eks. «muliggjør». Begrepet som peker hit med «er fra-begrep i» er fra-begrepet.
+    class_uri: skosno:AssociativeConceptRelation
+    annotations: {kravniva: valgfri}
+    slots:
+      - til_begrep
+      - relasjonsrolle
+
+  # --- 3.8 Generisk begrepsrelasjon ---------------------------------------
+  GeneriskBegrepsrelasjon:
+    description: >-
+      En overbegrep/underbegrep-relasjon. Bruk enten overbegrep eller
+      underbegrep, ikke begge.
+    class_uri: skosno:GenericConceptRelation
+    annotations: {kravniva: valgfri}
+    slots:
+      - overbegrep
+      - underbegrep
+      - inndelingskriterium
+    exactly_one_of:
+      - slot_conditions: {overbegrep: {required: true}}
+      - slot_conditions: {underbegrep: {required: true}}
+
+  # --- 3.9 Partitiv begrepsrelasjon ---------------------------------------
+  PartitivBegrepsrelasjon:
+    description: >-
+      En helhet/del-relasjon. Bruk enten delbegrep eller helhetsbegrep, ikke begge.
+    class_uri: skosno:PartitiveConceptRelation
+    annotations: {kravniva: valgfri}
+    slots:
+      - delbegrep
+      - helhetsbegrep
+      - inndelingskriterium
+    exactly_one_of:
+      - slot_conditions: {delbegrep: {required: true}}
+      - slot_conditions: {helhetsbegrep: {required: true}}
+
+  # --- 3.10 Begrepssamling (skos:Collection) ------------------------------
+  Begrepssamling:
+    description: En samling begreper, f.eks. alle begrepene en virksomhet forvalter.
+    class_uri: skos:Collection
+    annotations: {kravniva: valgfri}
+    slots:
+      - id
+      - samling_identifikator
+      - inneholder_begrep
+      - kontaktpunkt
+      - tittel
+      - utgiver
+      - beskrivelse
+    slot_usage:
+      tittel: {required: true, annotations: {kravniva: obligatorisk, kardinalitet: "1..n"}}
+      kontaktpunkt: {required: true}
+      utgiver: {required: true}
+
+  # Flerspråklig tekst og Kontaktpunkt kommer fra kjernemodellene.
+  AnbefaltTerm:
+    is_a: TekstEnPerSprak
+    description: >-
+      Anbefalt term. Skal finnes på både bokmål og nynorsk, og høyst én per
+      skriftspråk (2..n).
+    slot_usage:
+      nb: {required: true}
+      nn: {required: true}
+
+
+# ---------------------------------------------------------------------------
+# EGENSKAPER
+# ---------------------------------------------------------------------------
+slots:
+
+
+  # ---- Begrep: obligatoriske ----
+  anbefalt_term:
+    slot_uri: skos:prefLabel
+    range: AnbefaltTerm
+    inlined: true
+    required: true
+    annotations: {kravniva: obligatorisk, kardinalitet: "2..n"}
+  definisjon:
+    slot_uri: euvoc:xlDefinition
+    range: Definisjon
+    multivalued: true
+    inlined_as_list: true
+    required: true
+    description: Minst én definisjon. Hvert objekt har tekst på ett skriftspråk.
+    annotations: {kravniva: obligatorisk, kardinalitet: "1..n"}
+  identifikator:
+    slot_uri: dct:identifier
+    range: uri
+    multivalued: true
+    required: true
+    description: Som regel den samme URI-en som begrepet har.
+    annotations: {kravniva: obligatorisk, kardinalitet: "1..n"}
+
+  # ---- Begrep: anbefalte ----
+  ansvarlig_virksomhet:
+    slot_uri: dct:creator
+    range: uriorcurie
+    annotations: {kravniva: anbefalt, kardinalitet: "0..1", verdiomrade: "org:Organization"}
+  gyldig_fra:
+    slot_uri: euvoc:startDate
+    range: date
+    annotations: {kravniva: anbefalt, kardinalitet: "0..1"}
+  gyldig_til:
+    slot_uri: euvoc:endDate
+    range: date
+    annotations: {kravniva: anbefalt, kardinalitet: "0..1"}
+  fagomrade:
+    slot_uri: dct:subject
+    range: uriorcurie
+    multivalued: true
+    description: URI til et begrep i en kontrollert liste over fagområder.
+    annotations: {kravniva: anbefalt, kardinalitet: "0..n"}
+  merknad:
+    slot_uri: skos:scopeNote
+    range: TekstFlerePerSprak
+    inlined: true
+    annotations: {kravniva: anbefalt, kardinalitet: "0..n"}
+  tillatt_term:
+    slot_uri: skos:altLabel
+    range: TekstFlerePerSprak
+    inlined: true
+    annotations: {kravniva: anbefalt, kardinalitet: "0..n"}
+
+  # ---- Begrep: valgfrie ----
+  datastrukturterm:
+    slot_uri: skosno:dataStructureLabel
+    multivalued: true
+    description: Navnet begrepet har i en datastruktur, f.eks. et feltnavn.
+    annotations: {kravniva: valgfri, kardinalitet: "0..n"}
+  eksempel:
+    slot_uri: skos:example
+    range: TekstFlerePerSprak
+    inlined: true
+    annotations: {kravniva: valgfri, kardinalitet: "0..n"}
+  er_del_av:
+    slot_uri: xkos:isPartOf
+    range: uriorcurie
+    multivalued: true
+    annotations: {kravniva: valgfri, kardinalitet: "0..n", verdiomrade: "skos:Concept"}
+  er_erstattet_av:
+    slot_uri: dct:isReplacedBy
+    range: uriorcurie
+    multivalued: true
+    annotations: {kravniva: valgfri, kardinalitet: "0..n", verdiomrade: "skos:Concept"}
+  er_fra_begrep_i:
+    slot_uri: skosno:isFromConceptIn
+    range: AssosiativBegrepsrelasjon
+    multivalued: true
+    inlined_as_list: true
+    annotations: {kravniva: valgfri, kardinalitet: "0..n"}
+  er_relatert_til:
+    slot_uri: skos:related
+    range: uriorcurie
+    multivalued: true
+    annotations: {kravniva: valgfri, kardinalitet: "0..n", verdiomrade: "skos:Concept"}
+  erstatter:
+    slot_uri: dct:replaces
+    range: uriorcurie
+    multivalued: true
+    annotations: {kravniva: valgfri, kardinalitet: "0..n", verdiomrade: "skos:Concept"}
+  frarad_term:
+    slot_uri: skos:hiddenLabel
+    range: TekstFlerePerSprak
+    inlined: true
+    annotations: {kravniva: valgfri, kardinalitet: "0..n"}
+  generaliserer:
+    slot_uri: xkos:generalizes
+    range: uriorcurie
+    multivalued: true
+    annotations: {kravniva: valgfri, kardinalitet: "0..n", verdiomrade: "skos:Concept"}
+  har_eksakt_samsvar_med:
+    slot_uri: skos:exactMatch
+    range: uriorcurie
+    multivalued: true
+    annotations: {kravniva: valgfri, kardinalitet: "0..n", verdiomrade: "skos:Concept"}
+  har_generisk_begrepsrelasjon:
+    slot_uri: skosno:hasGenericConceptRelation
+    range: GeneriskBegrepsrelasjon
+    multivalued: true
+    inlined_as_list: true
+    annotations: {kravniva: valgfri, kardinalitet: "0..n"}
+  har_naert_samsvar_med:
+    slot_uri: skos:closeMatch
+    range: uriorcurie
+    multivalued: true
+    annotations: {kravniva: valgfri, kardinalitet: "0..n", verdiomrade: "skos:Concept"}
+  har_partitiv_begrepsrelasjon:
+    slot_uri: skosno:hasPartitiveConceptRelation
+    range: PartitivBegrepsrelasjon
+    multivalued: true
+    inlined_as_list: true
+    annotations: {kravniva: valgfri, kardinalitet: "0..n"}
+  inneholder:
+    slot_uri: xkos:hasPart
+    range: uriorcurie
+    multivalued: true
+    annotations: {kravniva: valgfri, kardinalitet: "0..n", verdiomrade: "skos:Concept"}
+  inngar_i_begrepssamling:
+    slot_uri: uneskos:memberOf
+    range: uriorcurie
+    multivalued: true
+    annotations: {kravniva: valgfri, kardinalitet: "0..n", verdiomrade: "skos:Collection"}
+  se_ogsa:
+    slot_uri: rdfs:seeAlso
+    range: uriorcurie
+    multivalued: true
+    annotations: {kravniva: valgfri, kardinalitet: "0..n", verdiomrade: "skos:Concept"}
+  spesialiserer:
+    slot_uri: xkos:specializes
+    range: uriorcurie
+    multivalued: true
+    annotations: {kravniva: valgfri, kardinalitet: "0..n", verdiomrade: "skos:Concept"}
+  status:
+    slot_uri: euvoc:status
+    range: Begrepsstatus
+    annotations: {kravniva: valgfri, kardinalitet: "0..1"}
+  verdiomrade:
+    slot_uri: skosno:valueRange
+    range: uri
+    multivalued: true
+    description: URI til en kodeliste eller lignende som angir tillatte verdier.
+    annotations: {kravniva: valgfri, kardinalitet: "0..n"}
+  versjonsnummer:
+    slot_uri: owl:versionInfo
+    annotations: {kravniva: valgfri, kardinalitet: "0..1"}
+  versjonsnote:
+    slot_uri: adms:versionNotes
+    range: TekstFlerePerSprak
+    inlined: true
+    annotations: {kravniva: valgfri, kardinalitet: "0..n"}
+
+  # ---- Definisjon ----
+  tekst:
+    slot_uri: rdf:value
+    range: TekstEttSprak
+    inlined: true
+    required: true
+    annotations: {kravniva: obligatorisk, kardinalitet: "1..1"}
+  forhold_til_kilde:
+    slot_uri: skosno:relationshipWithSource
+    range: ForholdTilKilde
+    annotations: {kravniva: anbefalt, kardinalitet: "0..1"}
+  kilde:
+    slot_uri: dct:source
+    range: uri
+    multivalued: true
+    description: Lenke til kilden, f.eks. en lovparagraf på Lovdata.
+    annotations: {kravniva: anbefalt, kardinalitet: "0..n"}
+  malgruppe:
+    slot_uri: dct:audience
+    range: Malgruppe
+    annotations: {kravniva: valgfri, kardinalitet: "0..1"}
+
+  # ---- Relasjoner ----
+  til_begrep:
+    slot_uri: skosno:hasToConcept
+    range: uriorcurie
+    multivalued: true
+    required: true
+    annotations: {kravniva: obligatorisk, kardinalitet: "1..n"}
+  relasjonsrolle:
+    slot_uri: skosno:relationRole
+    range: TekstEnPerSprak
+    inlined: true
+    required: true
+    description: Hva relasjonen betyr, f.eks. «muliggjør».
+    annotations: {kravniva: obligatorisk, kardinalitet: "1..n"}
+  overbegrep:
+    slot_uri: skosno:hasGenericConcept
+    range: uriorcurie
+    multivalued: true
+    annotations: {kravniva: obligatorisk (ett av to), kardinalitet: "1..n"}
+  underbegrep:
+    slot_uri: skosno:hasSpecificConcept
+    range: uriorcurie
+    multivalued: true
+    annotations: {kravniva: obligatorisk (ett av to), kardinalitet: "1..n"}
+  delbegrep:
+    slot_uri: skosno:hasPartitiveConcept
+    range: uriorcurie
+    multivalued: true
+    annotations: {kravniva: obligatorisk (ett av to), kardinalitet: "1..n"}
+  helhetsbegrep:
+    slot_uri: skosno:hasComprehensiveConcept
+    range: uriorcurie
+    multivalued: true
+    annotations: {kravniva: obligatorisk (ett av to), kardinalitet: "1..n"}
+  inndelingskriterium:
+    slot_uri: dct:description
+    range: TekstEnPerSprak
+    inlined: true
+    annotations: {kravniva: anbefalt, kardinalitet: "0..n"}
+
+  # ---- Begrepssamling ----
+  samling_identifikator:
+    slot_uri: dct:identifier
+    range: uri
+    required: true
+    annotations: {kravniva: obligatorisk, kardinalitet: "1..1"}
+  inneholder_begrep:
+    slot_uri: skos:member
+    range: uriorcurie
+    multivalued: true
+    required: true
+    annotations: {kravniva: obligatorisk, kardinalitet: "1..n", verdiomrade: "skos:Concept"}
+
+# ---------------------------------------------------------------------------
+# KODELISTER
+# ---------------------------------------------------------------------------
+enums:
+
+  Begrepsstatus:
+    description: Utvalg fra EUs kodeliste for begrepsstatus.
+    permissible_values:
+      DRAFT:
+        meaning: conceptstatus:DRAFT
+        description: Utkast
+      CANDIDATE:
+        meaning: conceptstatus:CANDIDATE
+        description: Kandidat
+      CURRENT:
+        meaning: conceptstatus:CURRENT
+        description: Gjeldende
+      DEPRECATED:
+        meaning: conceptstatus:DEPRECATED
+        description: Foreldet
+      RETIRED:
+        meaning: conceptstatus:RETIRED
+        description: Trukket tilbake
+
+  ForholdTilKilde:
+    description: Digdirs kodeliste «Typer forhold til kilde».
+    permissible_values:
+      self-composed:
+        meaning: kildetype:self-composed
+        description: Egendefinert
+      derived-from-source:
+        meaning: kildetype:derived-from-source
+        description: Basert på kilde
+      direct-from-source:
+        meaning: kildetype:direct-from-source
+        description: Sitat fra kilde
+
+  Malgruppe:
+    description: Digdirs kodeliste «Målgruppetype».
+    permissible_values:
+      public:
+        meaning: malgruppe:public
+        description: Allmennheten
+      specialist:
+        meaning: malgruppe:specialist
+        description: Spesialist

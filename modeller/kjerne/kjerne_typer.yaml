@@ -1,0 +1,83 @@
+id: https://example.org/modeller/kjerne_typer
+name: kjerne_typer
+title: Kjerne – felles typer
+description: >-
+  Felles byggesteiner som alle modeller kan bruke: identifikator, tittel,
+  beskrivelse, flerspråklig tekst og sporingsfelt.
+version: 1.1.0
+status: linkml:testing
+annotations:
+  lag: kjerne
+  eier: Seksjon for informasjonsforvaltning
+
+prefixes:
+  linkml: https://w3id.org/linkml/
+  kjerne: https://example.org/modeller/kjerne/
+  dct: http://purl.org/dc/terms/
+
+default_prefix: kjerne
+default_range: string
+
+imports:
+  - linkml:types
+
+classes:
+
+  Sporbar:
+    mixin: true
+    description: Legger til opprettet- og endret-dato på en klasse.
+    slots: [opprettet, sist_endret]
+
+  TekstEnPerSprak:
+    description: >-
+      Flerspråklig tekst med høyst én verdi per skriftspråk.
+      Erstatter rdf:langString, som LinkML ikke har.
+    slots: [nb, nn, en]
+
+  TekstFlerePerSprak:
+    description: Flerspråklig tekst med valgfritt antall verdier per skriftspråk.
+    slots: [nb, nn, en]
+    slot_usage:
+      nb: {multivalued: true}
+      nn: {multivalued: true}
+      en: {multivalued: true}
+
+  TekstEttSprak:
+    is_a: TekstEnPerSprak
+    description: Tekst på nøyaktig ett skriftspråk.
+    exactly_one_of:
+      - slot_conditions: {nb: {required: true}}
+      - slot_conditions: {nn: {required: true}}
+      - slot_conditions: {en: {required: true}}
+
+slots:
+
+  id:
+    identifier: true
+    range: uriorcurie
+    description: Objektets URI. Blir subjektet i RDF.
+  tittel:
+    slot_uri: dct:title
+    range: TekstEnPerSprak
+    inlined: true
+    description: Navn eller tittel, høyst én per skriftspråk.
+  beskrivelse:
+    slot_uri: dct:description
+    range: TekstEnPerSprak
+    inlined: true
+  opprettet:
+    slot_uri: dct:created
+    range: date
+  sist_endret:
+    slot_uri: dct:modified
+    range: date
+  endret_dato:
+    range: date
+    deprecated: Erstattet av sist_endret i versjon 1.1.0. Fjernes i 2.0.0.
+    deprecated_element_has_exact_replacement: sist_endret
+  nb:
+    description: Bokmål
+  nn:
+    description: Nynorsk
+  en:
+    description: Engelsk

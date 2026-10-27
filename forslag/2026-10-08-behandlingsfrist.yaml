@@ -1,0 +1,18 @@
+# Begrepsforslag. Valideres mot Begrepsforslag i modeller/tverrgaende/begrepsforvaltning.yaml
+id: forslag:2026-10-08-behandlingsfrist
+foreslatt_term: behandlingsfrist
+forklaring: Datoen saken senest skal være behandlet.
+behov: Trengs for å skille fristen fra den faktiske saksbehandlingstiden i statistikken.
+forslag_til_definisjon: frist for når et vedtak senest skal være fattet
+kilde:
+- https://lovdata.no/lov/1967-02-10-1/%C2%A711a
+ligner_pa:
+- https://example.org/begrep/saksbehandlingstid
+foreslatt_fagansvarlig: fagansvarlig:ola-hansen
+innmeldt_av:
+  navn: Lise Dahl
+  epost: mailto:lise.dahl@example.org
+  seksjon: Seksjon for analyse
+opprettet: "2026-10-08"
+forslagsstatus: under_avklaring
+behandlingskommentar: Avklarer med juridisk om kilden er riktig.

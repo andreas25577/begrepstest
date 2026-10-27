@@ -1,0 +1,14 @@
+# Fagansvarlige for begreper. Personene er oppdiktet.
+fagansvarlige:
+- id: fagansvarlig:kari-nordmann
+  navn: Kari Nordmann
+  epost: mailto:kari.nordmann@example.org
+  seksjon: Seksjon for saksbehandlingsstøtte
+- id: fagansvarlig:ola-hansen
+  navn: Ola Hansen
+  epost: mailto:ola.hansen@example.org
+  seksjon: Seksjon for analyse
+- id: fagansvarlig:ingrid-berg
+  navn: Ingrid Berg
+  epost: mailto:ingrid.berg@example.org
+  seksjon: Seksjon for informasjonsforvaltning

@@ -1,0 +1,44 @@
+/* Sideoppsett for begrepsforvaltningen. Komponentene kommer fra Smudi (vendor/smudi). */
+body { margin: 0; background: var(--ds-color-primary-background-default); font-family: Inter, sans-serif; }
+.topp { background: var(--ds-color-neutral-surface-default); border-bottom: 1px solid var(--ds-color-neutral-border-subtle); }
+.topp-innhold { max-width: 1200px; margin: 0 auto; padding: var(--ds-size-4) var(--ds-size-4); display: flex; gap: var(--ds-size-6); align-items: center; flex-wrap: wrap; }
+.topp-navn { font-weight: var(--ds-font-weight-semibold); color: var(--ds-color-primary-text-default); text-decoration: none; }
+.topp nav { display: flex; gap: var(--ds-size-5); flex-wrap: wrap; }
+.topp nav a[aria-current="page"] { font-weight: var(--ds-font-weight-semibold); text-decoration: none; color: var(--ds-color-primary-text-default); }
+main { max-width: 1200px; margin: 0 auto; padding: var(--ds-size-8) var(--ds-size-4) var(--ds-size-16); display: flex; flex-direction: column; gap: var(--ds-size-8); }
+.ingress { max-width: 70ch; color: var(--ds-color-neutral-text-subtle); }
+.stabel { display: flex; flex-direction: column; gap: var(--ds-size-4); }
+.rad { display: flex; gap: var(--ds-size-3); flex-wrap: wrap; align-items: center; }
+.rutenett { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr)); gap: var(--ds-size-4); }
+.to-kol { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: var(--ds-size-8); align-items: start; }
+@media (max-width: 900px) { .to-kol { grid-template-columns: minmax(0, 1fr); } .klistret { position: static; } }
+main > *, .stabel > *, .to-kol > * { min-width: 0; }
+.nokkeltall { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: var(--ds-size-4); }
+.nokkeltall .ds-card { display: flex; flex-direction: column; gap: var(--ds-size-1); }
+.tall { font-size: var(--ds-heading-lg-font-size); font-weight: 500; line-height: 1.2; }
+.tall[data-color="warning"] { color: var(--ds-color-warning-text-subtle); }
+.tall[data-color="danger"] { color: var(--ds-color-danger-text-subtle); }
+.dempet { color: var(--ds-color-neutral-text-subtle); }
+.liten { font-size: var(--ds-body-sm-font-size); }
+.kode { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.85em; }
+.rull { overflow-x: auto; max-width: 100%; position: relative; }
+.klistret { position: sticky; top: var(--ds-size-4); }
+.ds-table td, .ds-table th { vertical-align: top; }
+.ds-table .ds-tag { white-space: nowrap; }
+pre.yaml, pre.diff { margin: 0; padding: var(--ds-size-4); border-radius: var(--ds-border-radius-md); background: var(--ds-color-neutral-background-tinted);
+  border: 1px solid var(--ds-color-neutral-border-subtle); overflow-x: auto; font-size: 13px; line-height: 1.5; font-family: ui-monospace, Menlo, Consolas, monospace; max-height: 420px; }
+pre.diff .dp { background: var(--ds-color-success-surface-tinted); color: var(--ds-color-success-text-default); display: inline-block; width: 100%; }
+pre.diff .dm { background: var(--ds-color-danger-surface-tinted); color: var(--ds-color-danger-text-default); display: inline-block; width: 100%; }
+pre.diff .ds { color: var(--ds-color-neutral-text-subtle); }
+.mapping td:nth-child(2), .mapping td:nth-child(3) { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; }
+.mapping tr[data-utfylt="ja"] td:first-child { font-weight: var(--ds-font-weight-semibold); }
+.chip-valg { display: flex; gap: var(--ds-size-2); flex-wrap: wrap; }
+.ds-field + .ds-field, .ds-fieldset + .ds-field, .ds-field + .ds-fieldset { margin-top: var(--ds-size-5); }
+.ds-input[aria-invalid="true"] { border-color: var(--ds-color-danger-border-default); }
+.ds-card > * + * { margin-top: var(--ds-size-3); }
+.handlinger { display: flex; gap: var(--ds-size-3); flex-wrap: wrap; align-items: center; margin-top: var(--ds-size-6); }
+dialog.ds-dialog { max-width: min(880px, calc(100vw - 32px)); width: 100%; }
+dialog.ds-dialog::backdrop { background: rgba(0, 0, 0, .5); }
+.dialog-innhold { display: flex; flex-direction: column; gap: var(--ds-size-5); }
+.prototype { font-size: var(--ds-body-sm-font-size); }
+[hidden] { display: none !important; }

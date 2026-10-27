@@ -1,0 +1,77 @@
+id: https://example.org/modeller/dcat_ap_no_lett
+name: dcat_ap_no_lett
+title: DCAT-AP-NO (forenklet)
+description: >-
+  En forenklet utgave av DCAT-AP-NO for å beskrive datasett og distribusjoner.
+  Datasett kan peke til begrepene de bruker i SKOS-AP-NO-modellen.
+version: 0.3.0
+status: linkml:testing
+annotations:
+  lag: tverrgaende
+  eier: Seksjon for informasjonsforvaltning
+
+prefixes:
+  linkml: https://w3id.org/linkml/
+  dcat: http://www.w3.org/ns/dcat#
+  dct: http://purl.org/dc/terms/
+  dcatlett: https://example.org/modeller/dcat_ap_no_lett/
+  begrep: https://example.org/begrep/
+
+default_prefix: dcatlett
+default_range: string
+
+imports:
+  - linkml:types
+  - ../kjerne/kjerne_typer
+  - ../kjerne/kjerne_kontakt
+  - ../kjerne/kjerne_kodelister
+  - skos_ap_no_begrep
+
+classes:
+
+  Datasett:
+    class_uri: dcat:Dataset
+    description: En samling data som en virksomhet tilgjengeliggjør.
+    exact_mappings: [begrep:datasett]
+    mixins: [Sporbar]
+    slots:
+      - id
+      - tittel
+      - beskrivelse
+      - utgiver
+      - kontaktpunkt
+      - tilgangsniva
+      - frekvens
+      - begreper_brukt
+      - distribusjoner
+    slot_usage:
+      tittel: {required: true}
+      utgiver: {required: true}
+      tilgangsniva: {required: true}
+
+  Distribusjon:
+    class_uri: dcat:Distribution
+    slots: [tittel, format, tilgangsurl]
+
+slots:
+  begreper_brukt:
+    slot_uri: dct:subject
+    description: Begreper fra begrepskatalogen som datasettet bruker.
+    range: Begrep
+    multivalued: true
+    inlined: false
+  distribusjoner:
+    slot_uri: dcat:distribution
+    range: Distribusjon
+    multivalued: true
+    inlined_as_list: true
+  format:
+    slot_uri: dct:format
+    range: Filformat
+  tilgangsurl:
+    slot_uri: dcat:accessURL
+    range: uri
+
+enums:
+  Filformat:
+    permissible_values: {CSV: {}, JSON: {}, XML: {}, API: {}}

@@ -1,0 +1,22 @@
+# Begrep: datasett
+# Valideres mot ForvaltetBegrep i modeller/tverrgaende/begrepsforvaltning.yaml
+id: https://example.org/begrep/datasett
+identifikator:
+- https://example.org/begrep/datasett
+anbefalt_term:
+  nb: datasett
+  nn: datasett
+definisjon:
+- tekst:
+    nb: samling data som er publisert eller forvaltet av én virksomhet
+  forhold_til_kilde: self-composed
+- tekst:
+    nn: samling data som er publisert eller forvalta av éi verksemd
+kontaktpunkt:
+- epost: mailto:begrep@example.org
+utgiver: https://data.brreg.no/enhetsregisteret/api/enheter/999000222
+status: CURRENT
+er_relatert_til:
+- https://example.org/begrep/tilgangsniva
+fagansvarlig: fagansvarlig:ingrid-berg
+sist_endret: "2026-10-01"

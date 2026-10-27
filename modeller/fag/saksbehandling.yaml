@@ -1,0 +1,83 @@
+id: https://example.org/modeller/saksbehandling
+name: saksbehandling
+title: Saksbehandling
+description: Informasjonsmodell for søknader, saker og vedtak.
+version: 2.0.0
+status: linkml:testing
+annotations:
+  lag: fag
+  eier: Seksjon for saksbehandlingsstøtte
+
+prefixes:
+  linkml: https://w3id.org/linkml/
+  sak: https://example.org/modeller/saksbehandling/
+  begrep: https://example.org/begrep/
+
+default_prefix: sak
+default_range: string
+
+imports:
+  - linkml:types
+  - ../kjerne/kjerne_typer
+  - ../kjerne/kjerne_kodelister
+
+classes:
+
+  Soknad:
+    description: En søknad som er mottatt.
+    exact_mappings: [begrep:soknad]
+    mixins: [Sporbar]
+    slots: [id, saksnummer, sakstype, mottatt_dato, tilgangsniva]
+    slot_usage:
+      tilgangsniva:
+        required: true
+        description: Søknader er aldri offentlige.
+        equals_string_in: [begrenset, ikke_offentlig]
+
+  Klage:
+    is_a: Soknad
+    description: En søknad om ny vurdering av et vedtak.
+    exact_mappings: [begrep:klage]
+    slots: [paaklaget_vedtak]
+
+  Vedtak:
+    description: Avgjørelsen i en sak.
+    exact_mappings: [begrep:vedtak]
+    mixins: [Sporbar]
+    slots: [id, saksnummer, vedtaksdato, utfall, behandlingstid_dager, tilgangsniva]
+
+  Sakstype:
+    description: En type sak med eget regelverk.
+    slots: [id, tittel, beskrivelse]
+    slot_usage:
+      tittel: {required: true}
+
+slots:
+  saksnummer:
+    required: true
+    pattern: "^[0-9]{2}/[0-9]{5}$"
+  sakstype:
+    range: Sakstype
+    inlined: false
+  mottatt_dato:
+    range: date
+    required: true
+  vedtaksdato:
+    range: date
+  utfall:
+    range: Utfall
+  behandlingstid_dager:
+    range: integer
+    minimum_value: 0
+    exact_mappings: [begrep:saksbehandlingstid]
+  paaklaget_vedtak:
+    range: Vedtak
+    inlined: false
+
+enums:
+  Utfall:
+    permissible_values:
+      innvilget: {}
+      delvis_innvilget: {}
+      avslag: {}
+      henlagt: {}

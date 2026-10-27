@@ -1,0 +1,23 @@
+# Begrep: saksbehandlingstid
+# Valideres mot ForvaltetBegrep i modeller/tverrgaende/begrepsforvaltning.yaml
+id: https://example.org/begrep/saksbehandlingstid
+identifikator:
+- https://example.org/begrep/saksbehandlingstid
+anbefalt_term:
+  nb: saksbehandlingstid
+  nn: sakshandsamingstid
+definisjon:
+- tekst:
+    nb: tid fra en søknad er mottatt til vedtak er fattet
+  forhold_til_kilde: self-composed
+- tekst:
+    nn: tid frå ein søknad er motteken til vedtak er gjort
+kontaktpunkt:
+- epost: mailto:begrep@example.org
+utgiver: https://data.brreg.no/enhetsregisteret/api/enheter/999000222
+status: CURRENT
+er_relatert_til:
+- https://example.org/begrep/soknad
+- https://example.org/begrep/vedtak
+fagansvarlig: fagansvarlig:ola-hansen
+sist_endret: "2026-10-01"

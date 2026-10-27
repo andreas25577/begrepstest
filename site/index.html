@@ -1,0 +1,748 @@
+<!doctype html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modelloversikt</title>
+<style>
+  :root {
+    --bg: #f6f5f1; --flate: #ffffff; --flate2: #f0eee8; --tekst: #1d2125; --dempet: #5c6670; --linje: #dedbd2;
+    --aksent: #1f5f8b; --aksent-lys: #e3eef6;
+    --ok: #2e7d4f; --ok-lys: #e2f2e8; --varsel: #9a6400; --varsel-lys: #fbf0d9; --stopp: #a8322d; --stopp-lys: #f8e3e1;
+    --lag-kjerne: #6b4fa3; --lag-kjerne-lys: #eee8f7;
+    --lag-tverrgaende: #1f7a8c; --lag-tverrgaende-lys: #e0f1f4;
+    --lag-fag: #a0522d; --lag-fag-lys: #f6e9e1;
+    --radius: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #15181b; --flate: #1e2226; --flate2: #262b30; --tekst: #e8eaec; --dempet: #9aa4ad; --linje: #30363c;
+      --aksent: #7fb6dd; --aksent-lys: #1c3242;
+      --ok: #7cc79a; --ok-lys: #1b3426; --varsel: #e2b25a; --varsel-lys: #3a2e14; --stopp: #ec8a84; --stopp-lys: #3d1f1d;
+      --lag-kjerne: #b9a3e6; --lag-kjerne-lys: #2b2440;
+      --lag-tverrgaende: #7cc9d6; --lag-tverrgaende-lys: #183338;
+      --lag-fag: #e0a07c; --lag-fag-lys: #3a271c;
+    }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--tekst); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .ramme { max-width: 1180px; margin: 0 auto; padding: 0 16px 64px; }
+  header { padding: 32px 0 8px; }
+  header h1 { margin: 0; font-size: 1.75rem; letter-spacing: -0.01em; }
+  header p { margin: 4px 0 0; color: var(--dempet); max-width: 70ch; }
+  .tall { display: flex; gap: 24px; margin: 16px 0 0; flex-wrap: wrap; color: var(--dempet); font-size: 0.9rem; }
+  .tall b { color: var(--tekst); font-size: 1.15rem; margin-right: 4px; }
+  nav { display: flex; gap: 4px; border-bottom: 1px solid var(--linje); margin: 24px 0 20px; overflow-x: auto; }
+  nav button { background: none; border: 0; padding: 10px 14px; font: inherit; color: var(--dempet); cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+  nav button[aria-selected="true"] { color: var(--tekst); border-bottom-color: var(--aksent); font-weight: 600; }
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--aksent); outline-offset: 1px; }
+  h2 { font-size: 1.1rem; margin: 0 0 4px; }
+  h3 { font-size: 1rem; margin: 0; }
+  .panel { background: var(--flate); border: 1px solid var(--linje); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; }
+  .panel > p.hjelp { margin: 0 0 12px; color: var(--dempet); font-size: 0.92rem; }
+  .rull { overflow-x: auto; }
+  .rutenett { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px; }
+  .kort { background: var(--flate); border: 1px solid var(--linje); border-radius: var(--radius); padding: 16px;
+    display: flex; flex-direction: column; gap: 8px; }
+  button.kort { font: inherit; color: inherit; text-align: left; cursor: pointer; }
+  button.kort:hover { border-color: var(--aksent); }
+  .kort p { margin: 0; color: var(--dempet); font-size: 0.93rem; }
+  .meta { font-size: 0.85rem; color: var(--dempet); }
+  .brikker { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .brikke { font-size: 0.78rem; padding: 2px 8px; border-radius: 999px; background: var(--aksent-lys); color: var(--aksent);
+    border: 0; font-family: inherit; white-space: nowrap; }
+  button.brikke { cursor: pointer; }
+  button.brikke:hover { text-decoration: underline; }
+  .lag-kjerne { background: var(--lag-kjerne-lys); color: var(--lag-kjerne); }
+  .lag-tverrgaende { background: var(--lag-tverrgaende-lys); color: var(--lag-tverrgaende); }
+  .lag-fag { background: var(--lag-fag-lys); color: var(--lag-fag); }
+  .niva-feil { background: var(--stopp-lys); color: var(--stopp); }
+  .niva-advarsel { background: var(--varsel-lys); color: var(--varsel); }
+  .niva-merknad { background: var(--flate2); color: var(--dempet); }
+  .niva-ok { background: var(--ok-lys); color: var(--ok); }
+  .etikett { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--dempet); margin-top: 4px; }
+  .mermaid { text-align: center; min-height: 60px; }
+  .mermaid svg { max-width: 100%; height: auto; }
+  .mermaid .node { cursor: pointer; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--linje); vertical-align: top; }
+  th { color: var(--dempet); font-weight: 600; font-size: 0.8rem; }
+  code { font-size: 0.87em; }
+  .lenke { background: none; border: 0; padding: 0; font: inherit; color: var(--aksent); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+  .funn { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .funn li { display: flex; gap: 10px; align-items: baseline; font-size: 0.93rem; }
+  .funn li .brikke { min-width: 72px; text-align: center; }
+  .verktoy { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .verktoy input, .verktoy select { font: inherit; padding: 8px 10px; border: 1px solid var(--linje); border-radius: 8px;
+    background: var(--flate); color: var(--tekst); }
+  .verktoy input { flex: 1 1 240px; min-width: 0; }
+  .to-kol { display: grid; grid-template-columns: minmax(220px, 300px) 1fr; gap: 16px; align-items: start; }
+  @media (max-width: 760px) { .to-kol { grid-template-columns: 1fr; } }
+  .liste { list-style: none; margin: 0; padding: 0; max-height: 70vh; overflow-y: auto; border: 1px solid var(--linje);
+    border-radius: var(--radius); background: var(--flate); }
+  .liste li button { display: flex; justify-content: space-between; gap: 8px; width: 100%; text-align: left; background: none;
+    border: 0; border-bottom: 1px solid var(--linje); padding: 8px 12px; font: inherit; color: inherit; cursor: pointer; }
+  .liste li button:hover, .liste li button[aria-current="true"] { background: var(--aksent-lys); }
+  .liste small { color: var(--dempet); }
+  .varsel-boks { background: var(--varsel-lys); color: var(--varsel); padding: 8px 12px; border-radius: 8px; font-size: 0.92rem; }
+  .konsekvens { background: var(--aksent-lys); color: var(--tekst); padding: 10px 12px; border-radius: 8px; font-size: 0.95rem; }
+
+  /* matrise */
+  table.matrise { width: auto; border-collapse: separate; border-spacing: 0; }
+  table.matrise th, table.matrise td { border-bottom: 1px solid var(--linje); padding: 4px; text-align: center; }
+  table.matrise th.rad { text-align: right; white-space: nowrap; padding-right: 10px; position: sticky; left: 0; background: var(--flate); z-index: 1; }
+  table.matrise thead th.kol { height: 150px; vertical-align: bottom; padding: 0 2px 6px; }
+  table.matrise thead th.kol button { writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; font-size: 0.8rem;
+    background: none; border: 0; color: var(--tekst); cursor: pointer; padding: 0; font-family: inherit; }
+  table.matrise thead th.kol button:hover { color: var(--aksent); text-decoration: underline; }
+  table.matrise thead th.kol.foreldet button { color: var(--stopp); text-decoration: line-through; }
+  table.matrise th.gruppe { font-size: 0.75rem; font-weight: 600; border-bottom: 2px solid currentColor; white-space: nowrap; }
+  table.matrise td { width: 26px; min-width: 26px; height: 28px; }
+  table.matrise td.bruk { color: var(--aksent); }
+  table.matrise td.stram { color: var(--varsel); font-weight: 700; }
+  table.matrise td.tom { color: var(--linje); }
+  table.matrise tr:hover td, table.matrise tr:hover th.rad { background: var(--flate2); }
+  .tegnforklaring { display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.85rem; color: var(--dempet); margin-top: 10px; }
+  /* samsvar */
+  .info-boks { background: var(--aksent-lys); color: var(--tekst); padding: 12px 14px; border-radius: var(--radius); font-size: 0.93rem; margin-bottom: 16px; }
+  .kontroller { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .kontroller .kort h3 { font-size: 0.95rem; }
+  .dekning { display: flex; height: 12px; border-radius: 999px; overflow: hidden; background: var(--flate2); gap: 2px; }
+  .dekning span { display: block; height: 100%; }
+  .d-ok { background: var(--ok); } .d-advarsel { background: var(--varsel); } .d-feil { background: var(--stopp); } .d-mangler { background: var(--linje); }
+  .forklaring { display: flex; gap: 14px; flex-wrap: wrap; font-size: 0.8rem; color: var(--dempet); }
+  .forklaring i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+  .nokkeltall { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
+  .nokkeltall div { background: var(--flate2); border-radius: 8px; padding: 8px 10px; }
+  .nokkeltall b { display: block; font-size: 1.25rem; }
+  .nokkeltall span { font-size: 0.78rem; color: var(--dempet); }
+  .melding { font-size: 0.85rem; color: var(--dempet); display: block; margin-top: 2px; }
+  td .brikke { margin-right: 4px; }
+  .trend { display: block; }
+  .trend text { fill: var(--dempet); font-size: 10px; font-family: inherit; }
+  .sum-rad { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+  footer { margin-top: 48px; color: var(--dempet); font-size: 0.85rem; }
+</style>
+</head>
+<body>
+<div class="ramme">
+  <header>
+    <p style="margin:0 0 12px;display:flex;gap:20px;font-size:.95rem"><a href="mine-begreper.html">Mine begreper</a><a href="meld-inn.html">Meld inn begrep</a></p>
+    <h1>Modelloversikt</h1>
+    <p>Avhengigheter mellom informasjonsmodellene, elementene de deler og begrepene de bygger på. Siden genereres fra LinkML-filene hver gang de endres.</p>
+    <div class="tall" id="tall"></div>
+  </header>
+
+  <nav role="tablist">
+    <button role="tab" data-fane="oversikt" aria-selected="true">Oversikt</button>
+    <button role="tab" data-fane="modeller" aria-selected="false">Modeller</button>
+    <button role="tab" data-fane="matrise" aria-selected="false">Matrise</button>
+    <button role="tab" data-fane="element" aria-selected="false">Brukes i</button>
+    <button role="tab" data-fane="begreper" aria-selected="false">Begreper</button>
+    <button role="tab" data-fane="samsvar" aria-selected="false">Samsvar</button>
+  </nav>
+
+  <section id="fane-oversikt">
+    <div class="panel">
+      <h2>Sjekker</h2>
+      <p class="hjelp">Forvaltningsreglene kjøres ved hver endring. Feil stopper publiseringen.</p>
+      <ul class="funn" id="funn"></ul>
+    </div>
+    <div class="panel">
+      <h2>Importer mellom modellene</h2>
+      <p class="hjelp">Pilene går fra modellen som importerer til modellen som blir importert. Tallet er hvor mange elementer som brukes. Klikk på en modell for detaljer.</p>
+      <div class="rull"><div class="mermaid" id="importgraf"></div></div>
+    </div>
+  </section>
+
+  <section id="fane-modeller" hidden>
+    <div id="modell-liste" class="rutenett"></div>
+    <div id="modell-detalj" hidden></div>
+  </section>
+
+  <section id="fane-matrise" hidden>
+    <div class="panel">
+      <h2>Hvem bruker hva</h2>
+      <p class="hjelp">Rader er modellene som bruker noe. Kolonner er elementene som brukes av en annen modell enn den de er definert i. Klikk på en kolonne for detaljer.</p>
+      <div class="verktoy">
+        <select id="matrise-fra" aria-label="Vis elementer fra"><option value="">Elementer fra alle modeller</option></select>
+        <select id="matrise-type" aria-label="Elementtype">
+          <option value="">Alle typer</option><option value="slot">Slots</option><option value="klasse">Klasser</option><option value="enum">Enums</option>
+        </select>
+      </div>
+      <div class="rull" id="matrise"></div>
+      <div class="tegnforklaring">
+        <span><b style="color:var(--aksent)">●</b> bruker</span>
+        <span><b style="color:var(--varsel)">◆</b> strammer inn med slot_usage</span>
+        <span><span style="color:var(--stopp);text-decoration:line-through">navn</span> foreldet</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="fane-element" hidden>
+    <div class="to-kol">
+      <div>
+        <div class="verktoy"><input id="element-sok" type="search" placeholder="Søk etter element" aria-label="Søk etter element"></div>
+        <div class="verktoy">
+          <select id="element-filter" aria-label="Filter">
+            <option value="delt">Bare delte elementer</option>
+            <option value="">Alle elementer</option>
+          </select>
+        </div>
+        <ul class="liste" id="element-liste"></ul>
+      </div>
+      <div id="element-detalj"><p class="meta">Velg et element i listen.</p></div>
+    </div>
+  </section>
+
+  <section id="fane-begreper" hidden>
+    <div class="panel">
+      <h2>Begreper og modellene som bruker dem</h2>
+      <p class="hjelp">Koblingene kommer fra <code>exact_mappings</code>, <code>close_mappings</code> og <code>meaning</code> i modellene.</p>
+      <div class="rull"><div class="mermaid" id="begrepsgraf"></div></div>
+    </div>
+    <div class="rutenett" id="begrep-liste"></div>
+  </section>
+
+  <section id="fane-samsvar" hidden>
+    <div id="samsvar-illustrasjon"></div>
+    <div id="samsvar-oversikt"></div>
+    <div id="samsvar-detalj" hidden></div>
+  </section>
+
+  <footer>Generert fra LinkML-modellene i repoet · <a href="https://linkml.io">LinkML</a></footer>
+</div>
+
+<script type="module">
+const MERMAID_URL = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+let mermaidLaster;
+const hentMermaid = () => (mermaidLaster ??= import(MERMAID_URL).then(({ default: m }) => {
+  const morkt = matchMedia("(prefers-color-scheme: dark)").matches;
+  m.initialize({ startOnLoad: false, theme: morkt ? "dark" : "neutral", securityLevel: "strict", flowchart: { htmlLabels: false } });
+  return m;
+}));
+
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const nodeId = (s) => "n_" + String(s).replace(/[^a-zA-Z0-9]/g, "_");
+const lagNavn = { kjerne: "Kjerne", tverrgaende: "Tverrgående", fag: "Fag" };
+
+const [D, FUNN, SAMSVAR] = await Promise.all([
+  fetch("data/avhengigheter.json").then((r) => r.json()),
+  fetch("data/sjekk.json").then((r) => r.json()).catch(() => []),
+  fetch("data/samsvar.json").then((r) => (r.ok ? r.json() : null)).catch(() => null),
+]);
+const M = D.modeller, E = D.elementer, B = D.bruk, BG = D.begreper;
+const lagRang = D.lag;
+const modellerSortert = Object.values(M).sort((a, b) => (lagRang[a.lag] ?? 9) - (lagRang[b.lag] ?? 9) || a.navn.localeCompare(b.navn));
+
+// Hjelpere for bruk
+const brukAv = (el) => B.filter((b) => b.element === el);
+const delte = new Set(B.map((b) => b.element));
+const brukereAv = (el) => [...new Set(brukAv(el).map((b) => b.brukt_av))].sort();
+
+// Topp
+$("#tall").innerHTML = [
+  [Object.keys(M).length, "modeller"],
+  [Object.keys(E).length, "elementer"],
+  [delte.size, "delte elementer"],
+  [Object.values(BG).filter((b) => !b.ukjent).length, "begreper"],
+].map(([n, t]) => `<span><b>${n}</b>${t}</span>`).join("");
+
+// --- Navigasjon -----------------------------------------------------------
+const tegnet = new Set();
+function visFane(navn, oppdaterHash = true) {
+  document.querySelectorAll("nav button").forEach((b) => b.setAttribute("aria-selected", b.dataset.fane === navn));
+  document.querySelectorAll("section[id^=fane-]").forEach((s) => (s.hidden = s.id !== "fane-" + navn));
+  if (navn === "oversikt" && !tegnet.has(navn)) { tegnet.add(navn); tegnImportgraf(); }
+  if (navn === "begreper" && !tegnet.has(navn)) { tegnet.add(navn); tegnBegrepsgraf(); }
+  if (oppdaterHash) history.replaceState(null, "", "#" + navn);
+}
+document.querySelectorAll("nav button").forEach((b) => b.addEventListener("click", () => {
+  if (b.dataset.fane === "modeller") visModellListe();
+  visFane(b.dataset.fane);
+}));
+function gaTilModell(navn) { visFane("modeller", false); visModell(navn); history.replaceState(null, "", "#modell=" + navn); scrollTo(0, 0); }
+function gaTilElement(navn) { visFane("element", false); visElement(navn); history.replaceState(null, "", "#element=" + navn); scrollTo(0, 0); }
+document.addEventListener("click", (e) => {
+  const m = e.target.closest("[data-modell]"); if (m) return gaTilModell(m.dataset.modell);
+  const el = e.target.closest("[data-element]"); if (el) return gaTilElement(el.dataset.element);
+});
+const modellLenke = (n) => `<button class="brikke lag-${esc(M[n]?.lag)}" data-modell="${esc(n)}">${esc(n)}</button>`;
+const elementLenke = (n) => `<button class="lenke" data-element="${esc(n)}">${esc(n)}</button>`;
+
+async function tegn(el, kilde, etter) {
+  el.innerHTML = `<p class="meta">Tegner diagram…</p>`;
+  try {
+    const mermaid = await hentMermaid();
+    const { svg } = await mermaid.render("m" + Math.random().toString(36).slice(2), kilde);
+    el.innerHTML = svg;
+    etter?.(el);
+  } catch (err) {
+    el.innerHTML = `<p class="meta">Kunne ikke tegne diagrammet (${esc(err.message)}).</p>`;
+  }
+}
+function klikkbareNoder(el, kart) {
+  el.querySelectorAll("g.node").forEach((g) => {
+    const treff = Object.keys(kart).find((id) => g.id.includes(id + "-") || g.id.endsWith(id));
+    if (!treff) return;
+    g.setAttribute("role", "button"); g.setAttribute("tabindex", "0");
+    const gjor = () => kart[treff]();
+    g.addEventListener("click", gjor);
+    g.addEventListener("keydown", (e) => { if (e.key === "Enter") gjor(); });
+  });
+}
+
+// --- Oversikt -------------------------------------------------------------
+const funnFor = (filter) => FUNN.filter(filter);
+function funnListe(liste) {
+  if (!liste.length) return `<li><span class="brikke niva-ok">OK</span><span>Ingen funn.</span></li>`;
+  return liste.map((f) => `<li><span class="brikke niva-${f.niva}">${esc(f.niva)}</span><span>${esc(f.melding)}</span></li>`).join("");
+}
+$("#funn").innerHTML = funnListe(FUNN);
+
+function brudd(fra, til) {
+  return FUNN.some((f) => (f.regel === "lagdeling" || f.regel === "sykel") && f.melding.includes(fra) && f.melding.includes(til) && f.niva === "feil");
+}
+function tegnImportgraf() {
+  const L = ["flowchart TB"];
+  for (const lag of Object.keys(lagRang).sort((a, b) => lagRang[b] - lagRang[a])) {
+    const her = modellerSortert.filter((m) => m.lag === lag);
+    if (!her.length) continue;
+    L.push(`  subgraph lag_${lag}["${lagNavn[lag] ?? lag}"]`, "    direction LR");
+    her.forEach((m) => L.push(`    ${nodeId(m.navn)}["${m.navn}\nv${m.versjon}"]:::${lag}`));
+    L.push("  end");
+  }
+  const kanter = [];
+  for (const m of modellerSortert) for (const i of m.imports) {
+    if (!M[i]) continue;
+    const n = B.filter((b) => b.brukt_av === m.navn && b.fra === i).length;
+    L.push(`  ${nodeId(m.navn)} -->|${n}| ${nodeId(i)}`);
+    kanter.push(brudd(m.navn, i));
+  }
+  kanter.forEach((d, i) => d && L.push(`  linkStyle ${i} stroke:#c0392b,stroke-width:3px`));
+  L.push(
+    "  classDef kjerne fill:#eee8f7,stroke:#6b4fa3,color:#1d2125",
+    "  classDef tverrgaende fill:#e0f1f4,stroke:#1f7a8c,color:#1d2125",
+    "  classDef fag fill:#f6e9e1,stroke:#a0522d,color:#1d2125");
+  const kart = Object.fromEntries(modellerSortert.map((m) => [nodeId(m.navn), () => gaTilModell(m.navn)]));
+  tegn($("#importgraf"), L.join("\n"), (el) => klikkbareNoder(el, kart));
+}
+
+// --- Modeller -------------------------------------------------------------
+function visModellListe() {
+  $("#modell-detalj").hidden = true; $("#modell-liste").hidden = false;
+  $("#modell-liste").innerHTML = modellerSortert.map((m) => {
+    const definerer = Object.values(E).filter((e) => e.modell === m.navn).length;
+    const bruker = B.filter((b) => b.brukt_av === m.navn).length;
+    const brukes = B.filter((b) => b.fra === m.navn).length;
+    const f = FUNN.filter((x) => x.modell === m.navn && x.niva !== "merknad");
+    return `<button class="kort" data-modell="${esc(m.navn)}">
+      <div class="brikker"><span class="brikke lag-${esc(m.lag)}">${esc(lagNavn[m.lag] ?? m.lag)}</span>
+        <span class="brikke niva-merknad">v${esc(m.versjon)}</span>
+        ${f.length ? `<span class="brikke niva-${f.some((x) => x.niva === "feil") ? "feil" : "advarsel"}">${f.length} funn</span>` : ""}</div>
+      <h3>${esc(m.tittel)}</h3>
+      <p>${esc(m.beskrivelse)}</p>
+      <div class="meta">${esc(m.eier ?? "Ingen eier")}</div>
+      <div class="meta">Definerer ${definerer} · bruker ${bruker} fra andre · brukes ${brukes} steder</div>
+    </button>`;
+  }).join("");
+}
+visModellListe();
+
+function visModell(navn) {
+  const m = M[navn]; if (!m) return;
+  $("#modell-liste").hidden = true;
+  const d = $("#modell-detalj"); d.hidden = false;
+  const bruker = B.filter((b) => b.brukt_av === navn);
+  const brukes = B.filter((b) => b.fra === navn);
+  const egne = Object.values(E).filter((e) => e.modell === navn);
+  const tabell = (rader, kol) => rader.length ? `<div class="rull"><table><thead><tr>${kol.map((k) => `<th>${k}</th>`).join("")}</tr></thead><tbody>${rader.join("")}</tbody></table></div>` : `<p class="meta">Ingen.</p>`;
+  d.innerHTML = `
+    <p><button class="lenke" id="tilbake">← Alle modeller</button></p>
+    <div class="panel">
+      <div class="brikker"><span class="brikke lag-${esc(m.lag)}">${esc(lagNavn[m.lag] ?? m.lag)}</span><span class="brikke niva-merknad">v${esc(m.versjon)}</span><span class="brikke niva-merknad">${esc(m.status)}</span></div>
+      <h2 style="margin-top:8px">${esc(m.tittel)} <code style="color:var(--dempet);font-weight:400">${esc(m.navn)}</code></h2>
+      <p class="hjelp">${esc(m.beskrivelse)}</p>
+      <div class="meta">Eier: ${esc(m.eier ?? "–")} · Fil: <a href="modeller/${esc(m.navn)}.yaml">${esc(m.fil)}</a></div>
+      <div class="etikett">Importerer</div><div class="brikker">${m.imports.map(modellLenke).join("") || '<span class="meta">Ingen</span>'}</div>
+      <div class="etikett">Importeres av</div><div class="brikker">${m.importert_av.map(modellLenke).join("") || '<span class="meta">Ingen</span>'}</div>
+    </div>
+    <div class="panel"><h2>Funn</h2><ul class="funn">${funnListe(FUNN.filter((f) => f.modell === navn))}</ul></div>
+    <div class="panel"><h2>Bruker fra andre modeller (${bruker.length})</h2>
+      ${tabell(bruker.map((b) => `<tr><td>${elementLenke(b.element)}${E[b.element]?.foreldet ? ' <span class="brikke niva-advarsel">foreldet</span>' : ""}</td><td>${modellLenke(b.fra)}</td><td>${esc(b.hvordan)}</td><td>${esc(b.klasse ?? "–")}</td><td>${detaljer(b)}</td></tr>`), ["Element", "Fra", "Hvordan", "Klasse", "Detaljer"])}</div>
+    <div class="panel"><h2>Brukes av andre modeller (${brukes.length})</h2>
+      ${tabell(brukes.map((b) => `<tr><td>${elementLenke(b.element)}</td><td>${modellLenke(b.brukt_av)}</td><td>${esc(b.hvordan)}</td><td>${esc(b.klasse ?? "–")}</td><td>${detaljer(b)}</td></tr>`), ["Element", "Brukt av", "Hvordan", "Klasse", "Detaljer"])}</div>
+    <div class="panel"><h2>Elementer definert her (${egne.length})</h2>
+      <div class="brikker">${egne.map((e) => `<button class="brikke ${delte.has(e.navn) ? "" : "niva-merknad"}" data-element="${esc(e.navn)}" title="${esc(e.type)}">${esc(e.navn)}</button>`).join("")}</div>
+      <p class="meta" style="margin-top:8px">Blå: brukes av andre modeller. Grå: brukes bare her.</p></div>
+    <div class="panel"><h2>Klassediagram</h2><div class="rull"><div class="mermaid" id="modelldiagram"></div></div></div>`;
+  $("#tilbake").addEventListener("click", () => { visModellListe(); history.replaceState(null, "", "#modeller"); });
+  fetch(`data/diagram/${navn}.mmd`).then((r) => r.text()).then((t) => {
+    if (t.trim().startsWith("erDiagram") && t.trim().split("\n").length > 1) tegn($("#modelldiagram"), t);
+    else $("#modelldiagram").innerHTML = `<p class="meta">Modellen har ingen klasser.</p>`;
+  });
+}
+function detaljer(b) {
+  const d = b.detaljer || {};
+  const deler = Object.entries(d).map(([k, v]) => `<code>${esc(k)}: ${esc(Array.isArray(v) ? v.join(", ") : v)}</code>`);
+  return deler.join("<br>") || "";
+}
+
+// --- Matrise --------------------------------------------------------------
+const fraSelect = $("#matrise-fra");
+modellerSortert.filter((m) => B.some((b) => b.fra === m.navn)).forEach((m) => fraSelect.insertAdjacentHTML("beforeend", `<option value="${esc(m.navn)}">Elementer fra ${esc(m.navn)}</option>`));
+function visMatrise() {
+  const fra = fraSelect.value, type = $("#matrise-type").value;
+  const kolonner = [...delte].map((n) => E[n]).filter((e) => (!fra || e.modell === fra) && (!type || e.type === type))
+    .sort((a, b) => (lagRang[M[a.modell].lag] - lagRang[M[b.modell].lag]) || a.modell.localeCompare(b.modell) || brukereAv(b.navn).length - brukereAv(a.navn).length || a.navn.localeCompare(b.navn));
+  const rader = modellerSortert.filter((m) => B.some((b) => b.brukt_av === m.navn && kolonner.some((k) => k.navn === b.element)));
+  if (!kolonner.length) { $("#matrise").innerHTML = `<p class="meta">Ingen elementer passer filteret.</p>`; return; }
+  const grupper = [];
+  kolonner.forEach((k) => { const s = grupper.at(-1); s && s.modell === k.modell ? s.n++ : grupper.push({ modell: k.modell, n: 1 }); });
+  const celle = (rad, kol) => {
+    const her = B.filter((b) => b.brukt_av === rad.navn && b.element === kol.navn);
+    if (!her.length) return `<td class="tom">·</td>`;
+    const stram = her.find((b) => b.hvordan === "strammer inn");
+    const tittel = her.map((b) => `${b.hvordan}${b.klasse ? " i " + b.klasse : ""}`).join("; ");
+    return stram ? `<td class="stram" title="${esc(tittel)}">◆</td>` : `<td class="bruk" title="${esc(tittel)}">●</td>`;
+  };
+  $("#matrise").innerHTML = `<table class="matrise"><thead>
+    <tr><th class="rad"></th>${grupper.map((g) => `<th class="gruppe" colspan="${g.n}" style="color:var(--lag-${esc(M[g.modell].lag)})">${esc(g.modell)}</th>`).join("")}</tr>
+    <tr><th class="rad"></th>${kolonner.map((k) => `<th class="kol ${k.foreldet ? "foreldet" : ""}"><button data-element="${esc(k.navn)}" title="${esc(k.type)} · brukt av ${brukereAv(k.navn).length}">${esc(k.navn)}</button></th>`).join("")}</tr>
+    </thead><tbody>${rader.map((r) => `<tr><th class="rad"><button class="lenke" data-modell="${esc(r.navn)}">${esc(r.navn)}</button></th>${kolonner.map((k) => celle(r, k)).join("")}</tr>`).join("")}</tbody></table>`;
+}
+fraSelect.addEventListener("input", visMatrise); $("#matrise-type").addEventListener("input", visMatrise);
+visMatrise();
+
+// --- Brukes i -------------------------------------------------------------
+let valgtElement = null;
+function visElementListe() {
+  const q = $("#element-sok").value.trim().toLowerCase(), bareDelte = $("#element-filter").value === "delt";
+  const liste = Object.values(E).filter((e) => (!bareDelte || delte.has(e.navn)) && (!q || e.navn.toLowerCase().includes(q) || e.modell.includes(q)))
+    .sort((a, b) => brukereAv(b.navn).length - brukereAv(a.navn).length || a.navn.localeCompare(b.navn));
+  $("#element-liste").innerHTML = liste.map((e) => `<li><button data-element="${esc(e.navn)}" aria-current="${e.navn === valgtElement}">
+    <span>${esc(e.navn)} <small>${esc(e.type)} · ${esc(e.modell)}</small></span><small>${brukereAv(e.navn).length || ""}</small></button></li>`).join("")
+    || `<li style="padding:12px" class="meta">Ingen treff.</li>`;
+}
+$("#element-sok").addEventListener("input", visElementListe); $("#element-filter").addEventListener("input", visElementListe);
+
+function visElement(navn) {
+  const e = E[navn]; if (!e) return;
+  valgtElement = navn;
+  if (!delte.has(navn)) $("#element-filter").value = "";
+  visElementListe();
+  const bruk = brukAv(navn), brukere = brukereAv(navn);
+  const indirekte = [...new Set(brukere.flatMap((m) => M[m].importert_av))].filter((m) => !brukere.includes(m) && m !== e.modell);
+  const egenskaper = [];
+  if (e.uri) egenskaper.push(["URI", `<code>${esc(e.uri)}</code>`]);
+  if (e.type === "slot") {
+    egenskaper.push(["Verdiområde", E[e.range] ? elementLenke(e.range) : `<code>${esc(e.range ?? "string")}</code>`]);
+    egenskaper.push(["Påkrevd", e.paakrevd ? "ja" : "nei"], ["Flere verdier", e.flere ? "ja" : "nei"]);
+    if (e.pattern) egenskaper.push(["Mønster", `<code>${esc(e.pattern)}</code>`]);
+  }
+  if (e.type === "klasse") {
+    if (e.arver_fra) egenskaper.push(["Arver fra", elementLenke(e.arver_fra)]);
+    if (e.mixins?.length) egenskaper.push(["Mixins", e.mixins.map(elementLenke).join(", ")]);
+    if (e.mixin) egenskaper.push(["Type", "mixin"]);
+  }
+  if (e.type === "enum") egenskaper.push(["Verdier", Object.entries(e.verdier).map(([k, v]) => `<code>${esc(k)}</code>${v.foreldet ? " (foreldet)" : ""}`).join(", ")]);
+  if (e.begreper.length) egenskaper.push(["Begrep", e.begreper.map((b) => `<button class="brikke" data-begrep="${esc(b)}">${esc(BG[b]?.term ?? b)}</button>`).join(" ")]);
+  $("#element-detalj").innerHTML = `
+    <div class="panel">
+      <div class="brikker"><span class="brikke niva-merknad">${esc(e.type)}</span>${modellLenke(e.modell)}${e.foreldet ? '<span class="brikke niva-advarsel">foreldet</span>' : ""}</div>
+      <h2 style="margin-top:8px">${esc(navn)}</h2>
+      <p class="hjelp">${esc(e.beskrivelse) || "<i>Ingen beskrivelse.</i>"}</p>
+      ${e.foreldet ? `<p class="varsel-boks">${esc(e.foreldet)}${e.erstattes_av ? ` Erstattes av ${elementLenke(e.erstattes_av)}.` : ""}</p>` : ""}
+      <table>${egenskaper.map(([k, v]) => `<tr><th style="width:140px">${k}</th><td>${v}</td></tr>`).join("")}
+        <tr><th>Eier</th><td>${esc(M[e.modell].eier ?? "–")}</td></tr></table>
+    </div>
+    <div class="panel">
+      <h2>Konsekvens av endring</h2>
+      <p class="konsekvens">${brukere.length
+        ? `En endring i <b>${esc(navn)}</b> berører direkte <b>${brukere.length}</b> ${brukere.length === 1 ? "modell" : "modeller"}: ${brukere.map(modellLenke).join(" ")}${indirekte.length ? `<br>Indirekte, via import: ${indirekte.map(modellLenke).join(" ")}` : ""}`
+        : `Elementet brukes bare i ${modellLenke(e.modell)}. En endring berører ingen andre modeller.`}</p>
+      ${bruk.length ? `<div class="rull" style="margin-top:12px"><table><thead><tr><th>Modell</th><th>Klasse</th><th>Hvordan</th><th>Detaljer</th></tr></thead><tbody>
+        ${bruk.map((b) => `<tr><td>${modellLenke(b.brukt_av)}</td><td>${esc(b.klasse ?? "–")}</td><td>${esc(b.hvordan)}</td><td>${detaljer(b)}</td></tr>`).join("")}</tbody></table></div>` : ""}
+    </div>`;
+}
+visElementListe();
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-begrep]"); if (!b) return;
+  visFane("begreper", false); history.replaceState(null, "", "#begreper");
+  const kort = document.getElementById("begrep-" + nodeId(b.dataset.begrep));
+  kort?.scrollIntoView({ behavior: "smooth", block: "center" });
+  kort?.animate([{ outline: "2px solid var(--aksent)" }, { outline: "2px solid transparent" }], 1600);
+});
+
+// --- Begreper -------------------------------------------------------------
+const begrepListe = Object.values(BG).sort((a, b) => b.elementer.length - a.elementer.length || String(a.term).localeCompare(String(b.term)));
+$("#begrep-liste").innerHTML = begrepListe.map((b) => `
+  <article class="kort" id="begrep-${nodeId(b.id)}">
+    <div class="brikker">${b.ukjent ? '<span class="brikke niva-advarsel">finnes ikke i katalogen</span>' : `<span class="brikke niva-ok">${esc(b.status ?? "")}</span>`}
+      <span class="brikke niva-merknad">${b.elementer.length} koblinger</span></div>
+    <h3>${esc(b.term ?? b.id)}</h3>
+    <p>${esc(b.definisjon)}</p>
+    <div class="meta"><code>${esc(b.id)}</code></div>
+    ${b.overordnet?.length ? `<div class="etikett">Overordnet</div><div class="brikker">${b.overordnet.map((o) => `<button class="brikke" data-begrep="${esc(o)}">${esc(BG[o]?.term ?? o)}</button>`).join("")}</div>` : ""}
+    ${b.relatert?.length ? `<div class="etikett">Relatert</div><div class="brikker">${b.relatert.map((o) => `<button class="brikke" data-begrep="${esc(o)}">${esc(BG[o]?.term ?? o)}</button>`).join("")}</div>` : ""}
+    <div class="etikett">Brukes i</div>
+    <div>${b.elementer.length ? b.elementer.map((x) => `${E[x.element] ? elementLenke(x.element) : `<code>${esc(x.element)}</code>`} <span class="meta">i</span> ${modellLenke(x.modell)}`).join("<br>") : '<span class="meta">Ingen modeller</span>'}</div>
+  </article>`).join("");
+
+function tegnBegrepsgraf() {
+  const L = ["flowchart LR"];
+  const brukte = begrepListe.filter((b) => b.elementer.length);
+  L.push('  subgraph begreper["Begreper"]', "    direction TB");
+  begrepListe.forEach((b) => L.push(`    ${nodeId(b.id)}(["${(b.term ?? b.id).replace(/"/g, "'")}"]):::begrep`));
+  L.push("  end");
+  const perModell = {};
+  brukte.forEach((b) => b.elementer.forEach((x) => (perModell[x.modell] ??= new Set()).add(x.element)));
+  for (const [m, els] of Object.entries(perModell)) {
+    L.push(`  subgraph ${nodeId("m_" + m)}["${m}"]`, "    direction TB");
+    els.forEach((el) => L.push(`    ${nodeId(m + "_" + el)}["${el}"]:::${M[m]?.lag ?? "fag"}`));
+    L.push("  end");
+  }
+  brukte.forEach((b) => b.elementer.forEach((x) => L.push(`  ${nodeId(b.id)} --- ${nodeId(x.modell + "_" + x.element)}`)));
+  L.push("  classDef begrep fill:#e3eef6,stroke:#1f5f8b,color:#1d2125",
+    "  classDef kjerne fill:#eee8f7,stroke:#6b4fa3,color:#1d2125",
+    "  classDef tverrgaende fill:#e0f1f4,stroke:#1f7a8c,color:#1d2125",
+    "  classDef fag fill:#f6e9e1,stroke:#a0522d,color:#1d2125");
+  const kart = {};
+  brukte.forEach((b) => b.elementer.forEach((x) => { if (E[x.element]) kart[nodeId(x.modell + "_" + x.element)] = () => gaTilElement(x.element); }));
+  tegn($("#begrepsgraf"), L.join("\n"), (el) => klikkbareNoder(el, kart));
+}
+
+// --- Samsvar --------------------------------------------------------------
+const NIVA = { ok: 0, advarsel: 1, feil: 2 };
+const verst = (...s) => s.filter(Boolean).reduce((a, b) => (NIVA[b] > NIVA[a] ? b : a), "ok");
+const IDAG = new Date(SAMSVAR?.generert ?? Date.now());
+const gammelBekreftelse = (m) => !m.bekreftet_dato || (IDAG - new Date(m.bekreftet_dato)) / 864e5 > 365;
+const mappingStatus = (m) => verst(m.struktur.status, m.innhold.status, gammelBekreftelse(m) ? "advarsel" : "ok");
+const mappingTyper = {
+  exact: ["eksakt", "Kolonnen betyr det samme som elementet."],
+  close: ["nær", "Nesten det samme. Se merknad."],
+  narrow: ["delmengde", "Bare en del av radene hører til elementet."],
+  avledet: ["avledet", "Lagres ikke, men beregnes fra andre kolonner."],
+};
+const statusTekst = { ok: "OK", advarsel: "advarsel", feil: "feil" };
+const badge = (s, tekst) => `<span class="brikke niva-${s}">${esc(tekst ?? statusTekst[s])}</span>`;
+
+function forventet(system) {
+  // Klasser og slots i modellene som systemet skal dekke
+  const par = [];
+  for (const modell of system.modeller) {
+    Object.values(E).filter((e) => e.modell === modell && e.type === "klasse" && !e.mixin && !e.abstrakt).forEach((c) => {
+      const arvet = new Set(c.arver_fra ? E[c.arver_fra]?.slots ?? [] : []);
+      par.push({ klasse: c.navn, element: null });
+      (c.slots ?? []).filter((s) => !arvet.has(s)).forEach((s) => par.push({ klasse: c.navn, element: s }));
+    });
+  }
+  return par;
+}
+function analyserSystem(s) {
+  const mappinger = s.mappinger.map((m) => ({ ...m, status: mappingStatus(m), ukjent: !E[m.element ?? m.klasse] }));
+  const forv = forventet(s);
+  const harMapping = (p) => mappinger.some((m) => m.klasse === p.klasse && (m.element ?? null) === p.element);
+  const mangler = forv.filter((p) => !harMapping(p));
+  const umappetNiva = s.fasit === "modell" ? "feil" : "advarsel";
+  const umappet = s.umappet.map((u) => ({ ...u, niva: u.niva ?? umappetNiva }));
+  const teller = { ok: 0, advarsel: 0, feil: 0 };
+  mappinger.forEach((m) => teller[m.status]++);
+  const feil = teller.feil + umappet.filter((u) => u.niva === "feil").length;
+  const advarsler = teller.advarsel + umappet.filter((u) => u.niva === "advarsel").length;
+  return { ...s, mappinger, mangler, umappet, teller, feil, advarsler, totalt: forv.length };
+}
+const SYSTEMER = (SAMSVAR?.systemer ?? []).map(analyserSystem);
+
+function dekningslinje(s) {
+  const t = s.mappinger.length + s.mangler.length || 1;
+  const del = (n, k, tekst) => n ? `<span class="d-${k}" style="width:${(n / t) * 100}%" title="${n} ${tekst}"></span>` : "";
+  return `<div class="dekning" role="img" aria-label="${s.teller.ok} OK, ${s.teller.advarsel} med advarsel, ${s.teller.feil} med feil, ${s.mangler.length} uten fysisk plassering">
+    ${del(s.teller.ok, "ok", "OK")}${del(s.teller.advarsel, "advarsel", "med advarsel")}${del(s.teller.feil, "feil", "med feil")}${del(s.mangler.length, "mangler", "uten fysisk plassering")}</div>`;
+}
+const forklaringDekning = `<div class="forklaring"><span><i class="d-ok"></i>OK</span><span><i class="d-advarsel"></i>advarsel</span><span><i class="d-feil"></i>feil</span><span><i class="d-mangler"></i>ikke mappet</span></div>`;
+
+function trend(s) {
+  const punkter = [...(s.historikk ?? []), { dato: s.sist_kontrollert, feil: s.feil, advarsler: s.advarsler }];
+  const maks = Math.max(1, ...punkter.map((p) => p.feil + p.advarsler));
+  const W = 34, H = 70, B = 22;
+  const bars = punkter.map((p, i) => {
+    const hf = (p.feil / maks) * H, ha = (p.advarsler / maks) * H, x = i * W + 6;
+    const mnd = i === punkter.length - 1 ? "nå" : new Date(p.dato).toLocaleDateString("no", { month: "short" });
+    return `<g><title>${esc(p.dato)}: ${p.feil} feil, ${p.advarsler} advarsler</title>
+      <rect x="${x}" y="${H - ha - hf}" width="22" height="${ha}" rx="2" fill="var(--varsel)"></rect>
+      <rect x="${x}" y="${H - hf}" width="22" height="${hf}" rx="2" fill="var(--stopp)"></rect>
+      <text x="${x + 11}" y="${H + 14}" text-anchor="middle">${esc(mnd)}</text></g>`;
+  }).join("");
+  return `<svg class="trend" width="${punkter.length * W + 8}" height="${H + B}" role="img" aria-label="Avvik over tid">${bars}</svg>`;
+}
+
+function visSamsvarOversikt() {
+  $("#samsvar-detalj").hidden = true; $("#samsvar-oversikt").hidden = false;
+  if (!SAMSVAR) { $("#samsvar-oversikt").innerHTML = `<p class="meta">Ingen samsvarsrapport er lastet inn.</p>`; return; }
+  const alle = SYSTEMER.flatMap((s) => s.mappinger);
+  const andelOk = alle.length ? Math.round((alle.filter((m) => m.status === "ok").length / alle.length) * 100) : 0;
+  $("#samsvar-oversikt").innerHTML = `
+    <div class="kontroller">
+      <div class="kort"><h3>1. Struktur</h3><p>Finnes tabellen og kolonnen, og stemmer type, NOT NULL, fremmednøkler og kodelister med modellen? Leses fra databasens metadata.</p></div>
+      <div class="kort"><h3>2. Innhold</h3><p>Følger dataene reglene i modellen? Spørringer som bare teller brudd. Ingen verdier forlater databasen.</p></div>
+      <div class="kort"><h3>3. Mening</h3><p>Er mappingen bekreftet av noen som kjenner systemet? Bekreftelser eldre enn 12 måneder gir advarsel.</p></div>
+    </div>
+    <div class="panel"><div class="nokkeltall">
+      <div><b>${SYSTEMER.length}</b><span>systemer kontrollert</span></div>
+      <div><b>${alle.length}</b><span>mappinger</span></div>
+      <div><b>${andelOk} %</b><span>uten avvik</span></div>
+      <div><b style="color:var(--stopp)">${SYSTEMER.reduce((a, s) => a + s.feil, 0)}</b><span>feil</span></div>
+      <div><b style="color:var(--varsel)">${SYSTEMER.reduce((a, s) => a + s.advarsler, 0)}</b><span>advarsler</span></div>
+    </div></div>
+    <div class="rutenett">${SYSTEMER.map((s) => `
+      <button class="kort" data-system="${esc(s.id)}">
+        <div class="brikker"><span class="brikke niva-merknad">${esc(s.type)}</span>
+          ${s.fasit === "modell" ? '<span class="brikke lag-kjerne">modellen er fasit</span>' : '<span class="brikke lag-fag">databasen er fasit</span>'}
+          ${s.feil ? badge("feil", s.feil + " feil") : ""}${s.advarsler ? badge("advarsel", s.advarsler + " advarsler") : ""}</div>
+        <h3>${esc(s.navn)} <code style="color:var(--dempet);font-weight:400">${esc(s.id)}</code></h3>
+        <div class="meta">Modell: ${s.modeller.map(esc).join(", ")} · ${esc(s.eier)}</div>
+        ${dekningslinje(s)}
+        <div class="meta">${s.mappinger.length} av ${s.totalt} modellelementer mappet · ${s.umappet.length} kolonner uten modellelement · kontrollert ${esc(s.sist_kontrollert)}</div>
+      </button>`).join("")}
+    </div>
+    <div style="margin-top:10px">${forklaringDekning}</div>
+    ${SAMSVAR.uten_kilde?.length ? `<div class="panel" style="margin-top:16px"><h2>Modeller uten fysisk kilde</h2>
+      <table>${SAMSVAR.uten_kilde.map((u) => `<tr><td style="width:200px">${modellLenke(u.modell)}</td><td>${esc(u.grunn)}</td></tr>`).join("")}</table></div>` : ""}`;
+}
+
+function visSystem(id) {
+  const s = SYSTEMER.find((x) => x.id === id); if (!s) return;
+  $("#samsvar-oversikt").hidden = true;
+  const d = $("#samsvar-detalj"); d.hidden = false;
+  d.innerHTML = `
+    <p><button class="lenke" id="samsvar-tilbake">← Alle systemer</button></p>
+    <div class="panel">
+      <div class="brikker"><span class="brikke niva-merknad">${esc(s.type)}</span>${s.fasit === "modell" ? '<span class="brikke lag-kjerne">modellen er fasit</span>' : '<span class="brikke lag-fag">databasen er fasit</span>'}</div>
+      <h2 style="margin-top:8px">${esc(s.navn)} <code style="color:var(--dempet);font-weight:400">${esc(s.id)}</code></h2>
+      <p class="hjelp">${esc(s.fasit_tekst)}</p>
+      <div class="meta">Eier: ${esc(s.eier)} · Modell: ${s.modeller.map(modellLenke).join(" ")} · ${s.tabeller} tabeller, ${s.kolonner} kolonner · kontrollert ${esc(s.sist_kontrollert)}</div>
+      <div class="sum-rad" style="margin-top:14px">
+        <div style="flex:1 1 280px">${dekningslinje(s)}<div style="margin-top:6px">${forklaringDekning}</div></div>
+        <div><div class="etikett" style="margin:0 0 4px">Avvik over tid</div>${trend(s)}</div>
+      </div>
+    </div>
+    <div class="panel"><h2>Modell og database</h2>
+      <p class="hjelp">Klassene til venstre, tabellene de er mappet til til høyre. Fargen viser det verste avviket i mappingen.</p>
+      <div class="rull"><div class="mermaid" id="samsvar-graf"></div></div></div>
+    <div class="panel"><h2>Mappinger (${s.mappinger.length})</h2>
+      <div class="verktoy"><select id="samsvar-filter" aria-label="Filtrer på status">
+        <option value="">Alle</option><option value="feil">Bare feil</option><option value="advarsel">Feil og advarsler</option></select></div>
+      <div class="rull" id="samsvar-tabell"></div></div>
+    <div class="panel"><h2>Kolonner uten modellelement (${s.umappet.length})</h2>
+      <p class="hjelp">${s.fasit === "modell" ? "Modellen er fasit, så kolonner som ikke finnes i modellen er feil." : "Data som ikke er beskrevet. Bør enten mappes, legges til i modellen eller fjernes."}</p>
+      ${s.umappet.length ? `<div class="rull"><table><thead><tr><th>Kolonne</th><th>Type</th><th>Status</th><th>Merknad</th></tr></thead><tbody>
+        ${s.umappet.map((u) => `<tr><td><code>${esc(u.kolonne)}</code></td><td><code>${esc(u.type)}</code></td><td>${badge(u.niva)}</td><td>${esc(u.merknad)}</td></tr>`).join("")}</tbody></table></div>` : '<p class="meta">Ingen.</p>'}</div>
+    <div class="panel"><h2>Modellelementer uten fysisk plassering (${s.mangler.length})</h2>
+      <p class="hjelp">Elementer i modellen som ingen mapping peker til. Enten mangler mappingen, eller så lagres ikke informasjonen.</p>
+      ${s.mangler.length ? `<div class="brikker">${s.mangler.map((p) => `<button class="brikke niva-merknad" data-element="${esc(p.element ?? p.klasse)}">${esc(p.klasse)}${p.element ? "." + esc(p.element) : ""}</button>`).join("")}</div>` : '<p class="meta">Ingen.</p>'}</div>`;
+  $("#samsvar-tilbake").addEventListener("click", () => { visSamsvarOversikt(); history.replaceState(null, "", "#samsvar"); });
+  const fyllTabell = () => {
+    const f = $("#samsvar-filter").value;
+    const rader = s.mappinger.filter((m) => !f || NIVA[m.status] >= NIVA[f]).sort((a, b) => NIVA[b.status] - NIVA[a.status]);
+    $("#samsvar-tabell").innerHTML = rader.length ? `<table><thead><tr><th>Modellelement</th><th>Fysisk</th><th>Mapping</th><th>Struktur</th><th>Innhold</th><th>Bekreftet</th></tr></thead><tbody>
+      ${rader.map((m) => {
+        const [typeNavn, typeTekst] = mappingTyper[m.mappingtype] ?? [m.mappingtype, ""];
+        const el = m.element ?? m.klasse;
+        return `<tr>
+          <td>${m.ukjent ? `<code>${esc(el)}</code> ${badge("feil", "finnes ikke")}` : `<button class="lenke" data-element="${esc(el)}">${esc(m.klasse)}${m.element ? "." + esc(m.element) : ""}</button>`}</td>
+          <td><code>${esc(m.fysisk)}</code>${m.merknad ? `<span class="melding">${esc(m.merknad)}</span>` : ""}</td>
+          <td><span class="brikke niva-merknad" title="${esc(typeTekst)}">${esc(typeNavn)}</span></td>
+          <td>${badge(m.struktur.status)}<span class="melding">${esc(m.struktur.melding)}</span></td>
+          <td>${m.innhold.status === "ok" && !m.innhold.melding ? badge("ok") : `${badge(m.innhold.status, m.innhold.brudd ? m.innhold.brudd + " rader" : undefined)}<span class="melding">${esc(m.innhold.melding)}</span>`}</td>
+          <td>${esc(m.bekreftet_av ?? "–")}<span class="melding">${esc(m.bekreftet_dato ?? "")}${gammelBekreftelse(m) ? " · eldre enn 12 mnd" : ""}</span></td></tr>`;
+      }).join("")}</tbody></table>` : '<p class="meta">Ingen mappinger med denne statusen.</p>';
+  };
+  $("#samsvar-filter").addEventListener("input", fyllTabell); fyllTabell();
+  tegnSamsvarsgraf(s);
+}
+
+function tegnSamsvarsgraf(s) {
+  const tabell = (fys) => {
+    const forste = fys.split(" ")[0];
+    const deler = forste.split(".");
+    if (!/^[A-Z_.]+$/.test(forste)) return null;
+    return deler.length === 2 && deler[0] === s.id ? deler[1] : deler[0];
+  };
+  const kanter = {}; // klasse|tabell -> status
+  for (const m of s.mappinger) {
+    if (m.mappingtype === "avledet") continue; // beregnes, har ingen egen tabell
+    const t = tabell(m.fysisk); if (!t) continue;
+    const k = m.klasse + "|" + t;
+    kanter[k] = verst(kanter[k], m.status);
+  }
+  const klasser = [...new Set(s.mappinger.map((m) => m.klasse))];
+  const tabeller = [...new Set(Object.keys(kanter).map((k) => k.split("|")[1]))];
+  s.umappet.forEach((u) => { const t = u.kolonne.split(".")[0]; if (!tabeller.includes(t)) tabeller.push(t); });
+  const umappetPer = (t) => s.umappet.filter((u) => u.kolonne.startsWith(t + ".")).length;
+  const L = ["flowchart LR", `  subgraph modell["Modell: ${s.modeller.join(", ")}"]`, "    direction TB"];
+  klasser.forEach((c) => L.push(`    ${nodeId("k_" + c)}["${c}"]:::klasse`));
+  L.push("  end", `  subgraph db["${s.id}"]`, "    direction TB");
+  tabeller.forEach((t) => {
+    const n = umappetPer(t);
+    L.push(`    ${nodeId("t_" + t)}[("${t}${n ? `\n+${n} umappede kolonner` : ""}")]:::${n && s.fasit === "modell" ? "tabellfeil" : n ? "tabelladv" : "tabell"}`);
+  });
+  L.push("  end");
+  const farge = { ok: "#2e7d4f", advarsel: "#c08a00", feil: "#c0392b" };
+  const stiler = [];
+  Object.entries(kanter).forEach(([k, st], i) => {
+    const [c, t] = k.split("|");
+    const mapp = s.mappinger.filter((m) => m.klasse === c && tabell(m.fysisk) === t);
+    const n = mapp.filter((m) => m.status !== "ok").length;
+    L.push(`  ${nodeId("k_" + c)} -->|"${n ? n + " avvik" : "OK"}"| ${nodeId("t_" + t)}`);
+    stiler.push(`  linkStyle ${i} stroke:${farge[st]},stroke-width:${st === "ok" ? 2 : 3}px`);
+  });
+  L.push(...stiler,
+    "  classDef klasse fill:#f6e9e1,stroke:#a0522d,color:#1d2125",
+    "  classDef tabell fill:#eef0f2,stroke:#5c6670,color:#1d2125",
+    "  classDef tabelladv fill:#fbf0d9,stroke:#9a6400,color:#1d2125",
+    "  classDef tabellfeil fill:#f8e3e1,stroke:#a8322d,color:#1d2125");
+  const kart = Object.fromEntries(klasser.map((c) => [nodeId("k_" + c), () => gaTilElement(c)]));
+  tegn($("#samsvar-graf"), L.join("\n"), (el) => klikkbareNoder(el, kart));
+}
+
+if (SAMSVAR?.illustrasjon) {
+  $("#samsvar-illustrasjon").innerHTML = `<p class="info-boks"><b>Illustrasjon.</b> Systemene og tallene her er eksempler. I praksis lages <code>samsvar.json</code> av en planlagt jobb innenfor eget nettverk. Jobben leser bare databasenes metadata, teller regelbrudd og sender aldri ut verdier eller rader.</p>`;
+}
+visSamsvarOversikt();
+document.addEventListener("click", (e) => {
+  const s = e.target.closest("[data-system]"); if (!s) return;
+  visFane("samsvar", false); visSystem(s.dataset.system); history.replaceState(null, "", "#samsvar=" + s.dataset.system); scrollTo(0, 0);
+});
+document.querySelector('nav button[data-fane="samsvar"]').addEventListener("click", visSamsvarOversikt);
+
+// Vis fysisk plassering i «Brukes i»
+const fysiskFor = (navn) => SYSTEMER.flatMap((s) => s.mappinger.filter((m) => (m.element ?? m.klasse) === navn).map((m) => ({ ...m, system: s.id })));
+const opprinneligVisElement = visElement;
+visElement = function (navn) {
+  opprinneligVisElement(navn);
+  const f = fysiskFor(navn);
+  const panel = document.createElement("div");
+  panel.className = "panel";
+  panel.innerHTML = `<h2>Fysisk plassering</h2>${f.length
+    ? `<div class="rull"><table><thead><tr><th>System</th><th>Klasse</th><th>Kolonne</th><th>Status</th></tr></thead><tbody>
+      ${f.map((m) => `<tr><td><button class="lenke" data-system="${esc(m.system)}">${esc(m.system)}</button></td><td>${esc(m.klasse)}</td><td><code>${esc(m.fysisk)}</code></td><td>${badge(m.status)}</td></tr>`).join("")}</tbody></table></div>`
+    : `<p class="meta">Ingen mapping til en database.</p>`}`;
+  $("#element-detalj").appendChild(panel);
+};
+
+// --- Start fra lenke ------------------------------------------------------
+function fraHash() {
+  const h = decodeURIComponent(location.hash.slice(1));
+  if (h.startsWith("modell=")) return gaTilModell(h.slice(7));
+  if (h.startsWith("element=")) return gaTilElement(h.slice(8));
+  if (h.startsWith("samsvar=")) { visFane("samsvar", false); return visSystem(h.slice(8)); }
+  visFane(["oversikt", "modeller", "matrise", "element", "begreper", "samsvar"].includes(h) ? h : "oversikt", false);
+}
+fraHash();
+</script>
+</body>
+</html>

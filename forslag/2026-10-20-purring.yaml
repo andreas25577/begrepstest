@@ -1,0 +1,15 @@
+# Begrepsforslag. Valideres mot Begrepsforslag i modeller/tverrgaende/begrepsforvaltning.yaml
+id: forslag:2026-10-20-purring
+foreslatt_term: purring
+forklaring: En påminnelse vi sender når vi mangler dokumentasjon fra søkeren.
+behov: Brukes daglig i saksbehandlingen og i brevmalene, men betyr ulike ting i ulike team.
+brukseksempel: Vi sendte purring etter tre uker uten svar.
+ligner_pa:
+- https://example.org/begrep/henvendelse
+foreslatt_fagansvarlig: fagansvarlig:kari-nordmann
+innmeldt_av:
+  navn: Per Olsen
+  epost: mailto:per.olsen@example.org
+  seksjon: Seksjon for saksbehandlingsstøtte
+opprettet: "2026-10-20"
+forslagsstatus: innmeldt

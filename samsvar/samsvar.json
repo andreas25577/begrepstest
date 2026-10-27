@@ -1,0 +1,683 @@
+{
+  "illustrasjon": true,
+  "generert": "2026-10-23T02:15:00+02:00",
+  "systemer": [
+    {
+      "id": "SAKSDB",
+      "navn": "Saksbehandlingssystemet",
+      "type": "PostgreSQL 15",
+      "modeller": [
+        "saksbehandling"
+      ],
+      "fasit": "database",
+      "fasit_tekst": "Eksisterende system. Databasen er virkeligheten, og modellen beskriver den.",
+      "eier": "Seksjon for saksbehandlingsstøtte",
+      "sist_kontrollert": "2026-10-23",
+      "tabeller": 4,
+      "kolonner": 31,
+      "mappinger": [
+        {
+          "modell": "saksbehandling",
+          "klasse": "Soknad",
+          "element": null,
+          "fysisk": "SAKSDB.SOKNAD",
+          "mappingtype": "exact",
+          "struktur": {
+            "status": "ok",
+            "melding": "Tabell finnes."
+          },
+          "merknad": "",
+          "bekreftet_av": "Kari Nordmann",
+          "bekreftet_dato": "2026-05-12",
+          "innhold": {
+            "status": "ok",
+            "brudd": 0,
+            "melding": ""
+          }
+        },
+        {
+          "modell": "saksbehandling",
+          "klasse": "Soknad",
+          "element": "id",
+          "fysisk": "SOKNAD.SOK_ID",
+          "mappingtype": "exact",
+          "struktur": {
+            "status": "ok",
+            "melding": "Primærnøkkel."
+          },
+          "merknad": "",
+          "bekreftet_av": "Kari Nordmann",
+          "bekreftet_dato": "2026-05-12",
+          "innhold": {
+            "status": "ok",
+            "brudd": 0,
+            "melding": ""
+          }
+        },
+        {
+          "modell": "saksbehandling",
+          "klasse": "Soknad",
+          "element": "saksnummer",
+          "fysisk": "SOKNAD.SAKSNR",
+          "mappingtype": "exact",
+          "struktur": {
+            "status": "feil",
+            "melding": "Påkrevd i modellen, men kolonnen tillater NULL."
+          },
+          "merknad": "",
+          "bekreftet_av": "Kari Nordmann",
+          "bekreftet_dato": "2026-05-12",
+          "innhold": {
+            "status": "feil",
+            "brudd": 2,
+            "melding": "2 rader mangler saksnummer. 14 rader følger ikke mønsteret ^[0-9]{2}/[0-9]{5}$."
+          }
+        },
+        {
+          "modell": "saksbehandling",
+          "klasse": "Soknad",
+          "element": "mottatt_dato",
+          "fysisk": "SOKNAD.MOTT_DATO",
+          "mappingtype": "exact",
+          "struktur": {
+            "status": "advarsel",
+            "melding": "Modellen sier date, databasen har VARCHAR(10)."
+          },
+          "merknad": "",
+          "bekreftet_av": "Kari Nordmann",
+          "bekreftet_dato": "2026-05-12",
+          "innhold": {
+            "status": "advarsel",
+            "brudd": 3,
+            "melding": "3 rader kan ikke tolkes som dato."
+          }
+        },
+        {
+          "modell": "saksbehandling",
+          "klasse": "Soknad",
+          "element": "tilgangsniva",
+          "fysisk": "SOKNAD.GRADERING_KODE",
+          "mappingtype": "exact",
+          "struktur": {
+            "status": "advarsel",
+            "melding": "Ingen CHECK-regel eller oppslagstabell som begrenser verdiene."
+          },
+          "merknad": "",
+          "bekreftet_av": "Kari Nordmann",
+          "bekreftet_dato": "2026-05-12",
+          "innhold": {
+            "status": "feil",
+            "brudd": 41,
+            "melding": "41 rader har verdien «INTERN», som ikke finnes i Tilgangsniva."
+          }
+        },
+        {
+          "modell": "saksbehandling",
+          "klasse": "Soknad",
+          "element": "sakstype",
+          "fysisk": "SOKNAD.SAKSTYPE_ID",
+          "mappingtype": "exact",
+          "struktur": {
+            "status": "ok",
+            "melding": "Fremmednøkkel til KODE_SAKSTYPE."
+          },
+          "merknad": "",
+          "bekreftet_av": "Kari Nordmann",
+          "bekreftet_dato": "2026-05-12",
+          "innhold": {
+            "status": "ok",
+            "brudd": 0,
+            "melding": ""
+          }
+        },
+        {
+          "modell": "saksbehandling",
+          "klasse": "Soknad",
+          "element": "opprettet",
+          "fysisk": "SOKNAD.REG_TS",
+          "mappingtype": "close",
+          "struktur": {
+            "status": "ok",
+            "melding": "TIMESTAMP i databasen, date i modellen. Kompatibelt."
+          },
+          "merknad": "Registreringstidspunkt, ikke nødvendigvis datoen søknaden ble opprettet.",
+          "bekreftet_av": "Kari Nordmann",
+          "bekreftet_dato": "2026-05-12",
+          "innhold": {
+            "status": "ok",
+            "brudd": 0,
+            "melding": ""
+          }
+        },
+        {
+          "modell": "saksbehandling",
+          "klasse": "Soknad",
+          "element": "sist_endret",
+          "fysisk": "SOKNAD.ENDR_TS",
+          "mappingtype": "close",
+          "struktur": {
+            "status": "ok",
+            "melding": "TIMESTAMP i databasen, date i modellen. Kompatibelt."
+          },
+          "merknad": "",
+          "bekreftet_av": "Kari Nordmann",
+          "bekreftet_dato": "2026-05-12",
+          "innhold": {
+            "status": "ok",
+            "brudd": 0,
+            "melding": ""
+          }
+        },
+        {
+          "modell": "saksbehandling",
+          "klasse": "Klage",
+          "element": null,
+          "fysisk": "SAKSDB.SOKNAD (SOK_TYPE = 'K')",
+          "mappingtype": "narrow",
+          "struktur": {
+            "status": "ok",
+            "melding": "Klager ligger i samme tabell som søknader."
+          },
+          "merknad": "Delmengde: bare rader med SOK_TYPE = 'K'.",
+          "bekreftet_av": "Kari Nordmann",
+          "bekreftet_dato": "2026-05-12",
+          "innhold": {
+            "status": "ok",
+            "brudd": 0,
+            "melding": ""
+          }
+        },
+        {
+          "modell": "saksbehandling",
+          "klasse": "Klage",
+          "element": "paaklaget_vedtak",
+          "fysisk": "SOKNAD.KLAGE_VEDTAK_ID",
+          "mappingtype": "exact",
+          "struktur": {
+            "status": "advarsel",
+            "melding": "Ingen fremmednøkkel til VEDTAK."
+          },
+          "merknad": "",
+          "bekreftet_av": "Kari Nordmann",
+          "bekreftet_dato": "2026-05-12",
+          "innhold": {
+            "status": "advarsel",
+            "brudd": 6,
+            "melding": "6 klager peker til vedtak som ikke finnes."
+          }
+        },
+        {
+          "modell": "saksbehandling",
+          "klasse": "Vedtak",
+          "element": null,
+          "fysisk": "SAKSDB.VEDTAK",
+          "mappingtype": "exact",
+          "struktur": {
+            "status": "ok",
+            "melding": "Tabell finnes."
+          },
+          "merknad": "",
+          "bekreftet_av": "Kari Nordmann",
+          "bekreftet_dato": "2026-05-12",
+          "innhold": {
+            "status": "ok",
+            "brudd": 0,
+            "melding": ""
+          }
+        },
+        {
+          "modell": "saksbehandling",
+          "klasse": "Vedtak",
+          "element": "id",
+          "fysisk": "VEDTAK.VEDTAK_ID",
+          "mappingtype": "exact",
+          "struktur": {
+            "status": "ok",
+            "melding": "Primærnøkkel."
+          },
+          "merknad": "",
+          "bekreftet_av": "Kari Nordmann",
+          "bekreftet_dato": "2026-05-12",
+          "innhold": {
+            "status": "ok",
+            "brudd": 0,
+            "melding": ""
+          }
+        },
+        {
+          "modell": "saksbehandling",
+          "klasse": "Vedtak",
+          "element": "saksnummer",
+          "fysisk": "VEDTAK.SAKSNR",
+          "mappingtype": "exact",
+          "struktur": {
+            "status": "ok",
+            "melding": "NOT NULL og samme type som i SOKNAD."
+          },
+          "merknad": "",
+          "bekreftet_av": "Kari Nordmann",
+          "bekreftet_dato": "2026-05-12",
+          "innhold": {
+            "status": "ok",
+            "brudd": 0,
+            "melding": ""
+          }
+        },
+        {
+          "modell": "saksbehandling",
+          "klasse": "Vedtak",
+          "element": "vedtaksdato",
+          "fysisk": "VEDTAK.VEDT_DATO",
+          "mappingtype": "exact",
+          "struktur": {
+            "status": "ok",
+            "melding": "DATE."
+          },
+          "merknad": "",
+          "bekreftet_av": "Kari Nordmann",
+          "bekreftet_dato": "2026-05-12",
+          "innhold": {
+            "status": "ok",
+            "brudd": 0,
+            "melding": ""
+          }
+        },
+        {
+          "modell": "saksbehandling",
+          "klasse": "Vedtak",
+          "element": "utfall",
+          "fysisk": "VEDTAK.UTFALL_KODE",
+          "mappingtype": "exact",
+          "struktur": {
+            "status": "advarsel",
+            "melding": "Oppslagstabellen KODE_UTFALL har verdien «TRUKKET», som ikke finnes i enumen Utfall."
+          },
+          "merknad": "",
+          "bekreftet_av": "Kari Nordmann",
+          "bekreftet_dato": "2026-05-12",
+          "innhold": {
+            "status": "advarsel",
+            "brudd": 118,
+            "melding": "118 vedtak har utfallet «TRUKKET»."
+          }
+        },
+        {
+          "modell": "saksbehandling",
+          "klasse": "Vedtak",
+          "element": "behandlingstid_dager",
+          "fysisk": "VEDT_DATO − SOKNAD.MOTT_DATO",
+          "mappingtype": "avledet",
+          "struktur": {
+            "status": "ok",
+            "melding": "Lagres ikke. Beregnes ved uttrekk."
+          },
+          "merknad": "Avledet verdi. Arver datoproblemene i MOTT_DATO.",
+          "bekreftet_av": "Kari Nordmann",
+          "bekreftet_dato": "2026-05-12",
+          "innhold": {
+            "status": "ok",
+            "brudd": 0,
+            "melding": ""
+          }
+        },
+        {
+          "modell": "saksbehandling",
+          "klasse": "Vedtak",
+          "element": "tilgangsniva",
+          "fysisk": "VEDTAK.GRADERING_KODE",
+          "mappingtype": "exact",
+          "struktur": {
+            "status": "ok",
+            "melding": "CHECK-regel med de tre verdiene i Tilgangsniva."
+          },
+          "merknad": "",
+          "bekreftet_av": "Kari Nordmann",
+          "bekreftet_dato": "2026-05-12",
+          "innhold": {
+            "status": "ok",
+            "brudd": 0,
+            "melding": ""
+          }
+        },
+        {
+          "modell": "saksbehandling",
+          "klasse": "Sakstype",
+          "element": null,
+          "fysisk": "SAKSDB.KODE_SAKSTYPE",
+          "mappingtype": "exact",
+          "struktur": {
+            "status": "ok",
+            "melding": "Tabell finnes."
+          },
+          "merknad": "",
+          "bekreftet_av": "Ola Hansen",
+          "bekreftet_dato": "2024-03-02",
+          "innhold": {
+            "status": "ok",
+            "brudd": 0,
+            "melding": ""
+          }
+        },
+        {
+          "modell": "saksbehandling",
+          "klasse": "Sakstype",
+          "element": "id",
+          "fysisk": "KODE_SAKSTYPE.KODE",
+          "mappingtype": "exact",
+          "struktur": {
+            "status": "ok",
+            "melding": "Primærnøkkel."
+          },
+          "merknad": "",
+          "bekreftet_av": "Ola Hansen",
+          "bekreftet_dato": "2024-03-02",
+          "innhold": {
+            "status": "ok",
+            "brudd": 0,
+            "melding": ""
+          }
+        },
+        {
+          "modell": "saksbehandling",
+          "klasse": "Sakstype",
+          "element": "tittel",
+          "fysisk": "KODE_SAKSTYPE.BESKR",
+          "mappingtype": "close",
+          "struktur": {
+            "status": "advarsel",
+            "melding": "Én tekstkolonne. Modellen forventer tekst per språk (nb, nn, en)."
+          },
+          "merknad": "",
+          "bekreftet_av": "Ola Hansen",
+          "bekreftet_dato": "2024-03-02",
+          "innhold": {
+            "status": "ok",
+            "brudd": 0,
+            "melding": ""
+          }
+        }
+      ],
+      "umappet": [
+        {
+          "kolonne": "SOKNAD.SAKSBEH_IDENT",
+          "type": "VARCHAR(8)",
+          "merknad": "Ident for saksbehandler. Trolig personopplysning om ansatt."
+        },
+        {
+          "kolonne": "SOKNAD.MERKNAD_FRITEKST",
+          "type": "TEXT",
+          "merknad": "Fritekst. Kan inneholde hva som helst."
+        },
+        {
+          "kolonne": "SOKNAD.GML_STATUS",
+          "type": "CHAR(2)",
+          "merknad": "Ser ut som en gammel statuskode. Fylt ut i 4 % av radene."
+        },
+        {
+          "kolonne": "VEDTAK.BREV_MAL_ID",
+          "type": "INTEGER",
+          "merknad": "Peker til brevmal i et annet system."
+        },
+        {
+          "kolonne": "VEDTAK.SIGNERT_AV",
+          "type": "VARCHAR(8)",
+          "merknad": "Ident for beslutter."
+        }
+      ],
+      "historikk": [
+        {
+          "dato": "2026-05-01",
+          "feil": 5,
+          "advarsler": 16
+        },
+        {
+          "dato": "2026-06-01",
+          "feil": 4,
+          "advarsler": 15
+        },
+        {
+          "dato": "2026-07-01",
+          "feil": 4,
+          "advarsler": 14
+        },
+        {
+          "dato": "2026-08-01",
+          "feil": 3,
+          "advarsler": 13
+        },
+        {
+          "dato": "2026-09-01",
+          "feil": 3,
+          "advarsler": 12
+        },
+        {
+          "dato": "2026-10-01",
+          "feil": 2,
+          "advarsler": 12
+        }
+      ]
+    },
+    {
+      "id": "STATDW",
+      "navn": "Statistikkvarehuset",
+      "type": "SQL Server 2022",
+      "modeller": [
+        "statistikk"
+      ],
+      "fasit": "modell",
+      "fasit_tekst": "Nytt system. Modellen er fasiten, og tabellene genereres fra den.",
+      "eier": "Seksjon for analyse",
+      "sist_kontrollert": "2026-10-23",
+      "tabeller": 3,
+      "kolonner": 12,
+      "mappinger": [
+        {
+          "modell": "statistikk",
+          "klasse": "Statistikkserie",
+          "element": null,
+          "fysisk": "STATDW.DIM_SERIE",
+          "mappingtype": "exact",
+          "struktur": {
+            "status": "ok",
+            "melding": "Generert fra modellen med gen-sqlddl."
+          },
+          "merknad": "",
+          "bekreftet_av": "Generert",
+          "bekreftet_dato": "2026-09-30",
+          "innhold": {
+            "status": "ok",
+            "brudd": 0,
+            "melding": ""
+          }
+        },
+        {
+          "modell": "statistikk",
+          "klasse": "Statistikkserie",
+          "element": "id",
+          "fysisk": "DIM_SERIE.ID",
+          "mappingtype": "exact",
+          "struktur": {
+            "status": "ok",
+            "melding": "Primærnøkkel."
+          },
+          "merknad": "",
+          "bekreftet_av": "Generert",
+          "bekreftet_dato": "2026-09-30",
+          "innhold": {
+            "status": "ok",
+            "brudd": 0,
+            "melding": ""
+          }
+        },
+        {
+          "modell": "statistikk",
+          "klasse": "Statistikkserie",
+          "element": "tittel",
+          "fysisk": "DIM_SERIE_TITTEL",
+          "mappingtype": "exact",
+          "struktur": {
+            "status": "ok",
+            "melding": "Egen tabell med én rad per språk."
+          },
+          "merknad": "",
+          "bekreftet_av": "Generert",
+          "bekreftet_dato": "2026-09-30",
+          "innhold": {
+            "status": "ok",
+            "brudd": 0,
+            "melding": ""
+          }
+        },
+        {
+          "modell": "statistikk",
+          "klasse": "Statistikkserie",
+          "element": "frekvens",
+          "fysisk": "DIM_SERIE.FREKVENS",
+          "mappingtype": "exact",
+          "struktur": {
+            "status": "ok",
+            "melding": "CHECK-regel med maanedlig, kvartalsvis, aarlig."
+          },
+          "merknad": "",
+          "bekreftet_av": "Generert",
+          "bekreftet_dato": "2026-09-30",
+          "innhold": {
+            "status": "ok",
+            "brudd": 0,
+            "melding": ""
+          }
+        },
+        {
+          "modell": "statistikk",
+          "klasse": "Statistikkserie",
+          "element": "endret_dato",
+          "fysisk": "DIM_SERIE.ENDRET_DATO",
+          "mappingtype": "exact",
+          "struktur": {
+            "status": "advarsel",
+            "melding": "Elementet er foreldet i modellen. Kolonnen bør erstattes av SIST_ENDRET."
+          },
+          "merknad": "",
+          "bekreftet_av": "Generert",
+          "bekreftet_dato": "2026-09-30",
+          "innhold": {
+            "status": "ok",
+            "brudd": 0,
+            "melding": ""
+          }
+        },
+        {
+          "modell": "statistikk",
+          "klasse": "Maaltall",
+          "element": null,
+          "fysisk": "STATDW.FAKTA_MAALTALL",
+          "mappingtype": "exact",
+          "struktur": {
+            "status": "ok",
+            "melding": "Generert fra modellen."
+          },
+          "merknad": "",
+          "bekreftet_av": "Generert",
+          "bekreftet_dato": "2026-09-30",
+          "innhold": {
+            "status": "ok",
+            "brudd": 0,
+            "melding": ""
+          }
+        },
+        {
+          "modell": "statistikk",
+          "klasse": "Maaltall",
+          "element": "periode",
+          "fysisk": "FAKTA_MAALTALL.PERIODE",
+          "mappingtype": "exact",
+          "struktur": {
+            "status": "ok",
+            "melding": "NOT NULL."
+          },
+          "merknad": "",
+          "bekreftet_av": "Generert",
+          "bekreftet_dato": "2026-09-30",
+          "innhold": {
+            "status": "ok",
+            "brudd": 0,
+            "melding": "Alle verdier følger mønsteret."
+          }
+        },
+        {
+          "modell": "statistikk",
+          "klasse": "Maaltall",
+          "element": "antall_soknader",
+          "fysisk": "FAKTA_MAALTALL.ANTALL_SOKNADER",
+          "mappingtype": "exact",
+          "struktur": {
+            "status": "ok",
+            "melding": "INTEGER."
+          },
+          "merknad": "",
+          "bekreftet_av": "Generert",
+          "bekreftet_dato": "2026-09-30",
+          "innhold": {
+            "status": "ok",
+            "brudd": 0,
+            "melding": ""
+          }
+        },
+        {
+          "modell": "statistikk",
+          "klasse": "Maaltall",
+          "element": "median_behandlingstid",
+          "fysisk": "FAKTA_MAALTALL.MEDIAN_BEH_TID",
+          "mappingtype": "exact",
+          "struktur": {
+            "status": "ok",
+            "melding": "INTEGER."
+          },
+          "merknad": "",
+          "bekreftet_av": "Generert",
+          "bekreftet_dato": "2026-09-30",
+          "innhold": {
+            "status": "ok",
+            "brudd": 0,
+            "melding": ""
+          }
+        }
+      ],
+      "umappet": [
+        {
+          "kolonne": "FAKTA_MAALTALL.ANTALL_KLAGER",
+          "type": "INTEGER",
+          "merknad": "Lagt til direkte i databasen i september. Finnes ikke i modellen.",
+          "niva": "feil"
+        }
+      ],
+      "historikk": [
+        {
+          "dato": "2026-08-01",
+          "feil": 0,
+          "advarsler": 1
+        },
+        {
+          "dato": "2026-09-01",
+          "feil": 0,
+          "advarsler": 1
+        },
+        {
+          "dato": "2026-10-01",
+          "feil": 1,
+          "advarsler": 1
+        }
+      ]
+    }
+  ],
+  "uten_kilde": [
+    {
+      "modell": "dcat_ap_no_lett",
+      "grunn": "Publiseringsformat. Har ingen egen database."
+    },
+    {
+      "modell": "skos_ap_no_begrep",
+      "grunn": "Begrepene forvaltes i begrepskatalogen, ikke i en database."
+    }
+  ]
+}

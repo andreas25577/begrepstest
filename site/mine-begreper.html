@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="no" data-color-scheme="light" data-size="md">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mine begreper</title>
+<link rel="stylesheet" href="vendor/smudi/styles.css">
+<link rel="stylesheet" href="forvaltning.css">
+</head>
+<body>
+<header class="topp">
+  <div class="topp-innhold">
+    <a class="topp-navn" href="index.html">Begreper og modeller</a>
+    <nav aria-label="Hovedmeny">
+      <a class="ds-link" href="index.html">Modelloversikt</a>
+      <a class="ds-link" href="mine-begreper.html" aria-current="page">Mine begreper</a>
+      <a class="ds-link" href="meld-inn.html">Meld inn begrep</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="rad" style="justify-content: space-between; align-items: flex-end">
+    <div class="stabel">
+      <h1 class="ds-heading" data-size="lg" id="tittel">Mine begreper</h1>
+      <p class="ds-paragraph ingress">Begrepene du er fagansvarlig for, hvor de brukes og hvordan det står til med dem. Endringer du gjør, sendes til godkjenning før de blir gjeldende.</p>
+    </div>
+    <div class="ds-field" style="min-width: 300px">
+      <label class="ds-label" for="hvem">Vis som</label>
+      <div data-field="description" class="prototype">Prototype: i en ekte løsning kommer dette fra innloggingen.</div>
+      <select class="ds-input" id="hvem"></select>
+    </div>
+  </div>
+
+  <div class="nokkeltall" id="nokkeltall"></div>
+
+  <section class="stabel" id="forslag-seksjon" aria-labelledby="forslag-tittel">
+    <h2 class="ds-heading" data-size="sm" id="forslag-tittel">Forslag som venter på deg</h2>
+    <div class="rutenett" id="forslag"></div>
+  </section>
+
+  <section class="stabel" aria-labelledby="begreper-tittel">
+    <h2 class="ds-heading" data-size="sm" id="begreper-tittel">Begrepene dine</h2>
+    <div class="rull"><table class="ds-table" data-border="true" data-zebra="false">
+      <thead><tr><th>Begrep</th><th>Status</th><th>Brukes i</th><th>I databasene</th><th>Sist endret</th><th><span class="ds-sr-only">Handling</span></th></tr></thead>
+      <tbody id="begreper"></tbody>
+    </table></div>
+  </section>
+</main>
+
+<dialog class="ds-dialog" id="dialog" aria-labelledby="dialog-tittel">
+  <form method="dialog" class="dialog-innhold" id="dialog-skjema" novalidate>
+    <div class="rad" style="justify-content: space-between">
+      <h2 class="ds-heading" data-size="sm" id="dialog-tittel"></h2>
+      <button class="ds-button" data-variant="tertiary" value="lukk" type="submit" aria-label="Lukk">✕</button>
+    </div>
+    <div id="dialog-innhold"></div>
+  </form>
+</dialog>
+
+<script type="module">
+import { $, $$, esc, idag, kopi, slug, term, filnavnFor, lastData, valider, tilYaml, rens, diffHtml,
+  issueTekst, issueLenke, feiloppsummering, kopierKnapp, begrepsstatus, forslagsstatus, tag, husk, skjemaFor, erListe, settSti } from "./forvaltning.js";
+
+const { fv, avh, samsvar, skjemaBegrep, skjemaForslag, config } = await lastData();
+const personer = Object.fromEntries(fv.fagansvarlige.map((p) => [p.id, p]));
+const begrepById = Object.fromEntries(fv.begreper.map((b) => [b.id, b]));
+const kode = Object.fromEntries(Object.entries(fv.kodelister).map(([k, v]) => [k, v]));
+let meg = husk.hent("fagansvarlig") ?? fv.fagansvarlige[0].id;
+if (!personer[meg]) meg = fv.fagansvarlige[0].id;
+
+$("#hvem").innerHTML = fv.fagansvarlige.map((p) => `<option value="${esc(p.id)}">${esc(p.navn)} – ${esc(p.seksjon)}</option>`).join("");
+$("#hvem").value = meg;
+$("#hvem").addEventListener("input", (e) => { meg = e.target.value; husk.sett("fagansvarlig", meg); tegn(); });
+
+// --- Bruk og samsvar for et begrep -------------------------------------------------
+const NIVA = { ok: 0, advarsel: 1, feil: 2 };
+function brukAv(b) {
+  const el = avh?.begreper?.[b.id]?.elementer ?? [];
+  const modeller = new Set(el.map((x) => x.modell));
+  for (const x of el) for (const u of avh?.bruk ?? []) if (u.element === x.element) modeller.add(u.brukt_av);
+  return { elementer: el, modeller: [...modeller].sort() };
+}
+function samsvarFor(b) {
+  const navn = new Set(brukAv(b).elementer.map((x) => x.element));
+  // Et begrep på en klasse gjelder også feltene i klassen, så ta med alle mappinger for klassen
+  const treff = (samsvar?.systemer ?? []).flatMap((s) => s.mappinger.filter((m) => navn.has(m.element ?? m.klasse) || navn.has(m.klasse)).map((m) => ({ ...m, system: s.id })));
+  const status = (m) => [m.struktur.status, m.innhold.status].reduce((a, c) => (NIVA[c] > NIVA[a] ? c : a), "ok");
+  const avvik = treff.filter((m) => status(m) !== "ok");
+  const verst = treff.map(status).reduce((a, c) => (NIVA[c] > NIVA[a] ? c : a), "ok");
+  return { treff, avvik, verst, systemer: [...new Set(treff.map((m) => m.system))] };
+}
+
+// --- Tegn siden -------------------------------------------------------------------
+function tegn() {
+  const p = personer[meg];
+  $("#tittel").textContent = `Mine begreper – ${p.navn}`;
+  const mine = fv.begreper.filter((b) => b.fagansvarlig === meg);
+  const venter = fv.forslag.filter((f) => f.foreslatt_fagansvarlig === meg && ["innmeldt", "under_avklaring"].includes(f.forslagsstatus));
+  const medAvvik = mine.filter((b) => samsvarFor(b).avvik.length);
+  const utkast = mine.filter((b) => ["DRAFT", "CANDIDATE"].includes(b.status));
+
+  $("#nokkeltall").innerHTML = [
+    [mine.length, "begreper du eier", ""],
+    [venter.length, venter.length === 1 ? "forslag venter på deg" : "forslag venter på deg", venter.length ? "warning" : ""],
+    [medAvvik.length, "har avvik i databasene", medAvvik.length ? "danger" : ""],
+    [utkast.length, "er ikke gjeldende ennå", ""],
+  ].map(([n, t, c]) => `<div class="ds-card"><span class="tall" data-color="${c}">${n}</span><span class="ds-paragraph" data-size="sm">${t}</span></div>`).join("");
+
+  $("#forslag-seksjon").hidden = !venter.length;
+  $("#forslag").innerHTML = venter.map((f) => {
+    const [st, farge] = forslagsstatus[f.forslagsstatus];
+    return `<article class="ds-card">
+      <div class="rad">${tag(st, farge)}<span class="dempet liten">Meldt inn ${esc(f.opprettet)} av ${esc(f.innmeldt_av.navn)}</span></div>
+      <h3 class="ds-heading" data-size="xs">${esc(f.foreslatt_term)}</h3>
+      <p class="ds-paragraph" data-size="sm">${esc(f.forklaring)}</p>
+      <p class="ds-paragraph dempet" data-size="sm"><b>Hvorfor:</b> ${esc(f.behov)}</p>
+      ${f.ligner_pa?.length ? `<p class="ds-paragraph" data-size="sm"><b>Ligner på:</b> ${f.ligner_pa.map((x) => esc(term(begrepById[x]) || x)).join(", ")}</p>` : ""}
+      ${f.behandlingskommentar ? `<p class="ds-paragraph" data-size="sm"><b>Kommentar:</b> ${esc(f.behandlingskommentar)}</p>` : ""}
+      <div class="rad">
+        <button class="ds-button" data-variant="primary" data-size="sm" data-handling="opprett" data-forslag="${esc(f.id)}">Opprett som begrep</button>
+        ${f.forslagsstatus === "innmeldt" ? `<button class="ds-button" data-variant="secondary" data-size="sm" data-handling="avklaring" data-forslag="${esc(f.id)}">Ta til avklaring</button>` : ""}
+        <button class="ds-button" data-variant="tertiary" data-size="sm" data-handling="avslutt" data-forslag="${esc(f.id)}">Avvis eller marker som duplikat</button>
+      </div></article>`;
+  }).join("");
+
+  $("#begreper").innerHTML = mine.length ? mine.map((b) => {
+    const [st, farge] = begrepsstatus[b.status] ?? [b.status, "neutral"];
+    const bruk = brukAv(b), sv = samsvarFor(b);
+    const db = !sv.treff.length ? `<span class="dempet">–</span>`
+      : sv.verst === "ok" ? tag(`✓ OK i ${sv.systemer.join(", ")}`, "success")
+      : tag(`${sv.verst === "feil" ? "✕" : "▲"} ${sv.avvik.length} avvik i ${[...new Set(sv.avvik.map((m) => m.system))].join(", ")}`, sv.verst === "feil" ? "danger" : "warning");
+    return `<tr>
+      <td><b>${esc(term(b))}</b><div class="dempet liten">${esc((b.definisjon?.find((d) => d.tekst?.nb)?.tekst.nb) ?? "")}</div></td>
+      <td>${tag(st, farge)}</td>
+      <td>${bruk.modeller.length ? bruk.modeller.map((m) => `<a class="ds-link" href="index.html#modell=${esc(m)}">${esc(m)}</a>`).join("<br>") : `<span class="dempet">Ikke brukt</span>`}</td>
+      <td>${db}</td>
+      <td class="liten">${esc(b.sist_endret ?? "–")}</td>
+      <td><button class="ds-button" data-variant="secondary" data-size="sm" data-handling="endre" data-begrep="${esc(b.id)}">Endre</button></td></tr>`;
+  }).join("") : `<tr><td colspan="6">Du er ikke fagansvarlig for noen begreper.</td></tr>`;
+}
+tegn();
+
+document.addEventListener("click", (e) => {
+  const k = e.target.closest("[data-handling]"); if (!k) return;
+  const f = fv.forslag.find((x) => x.id === k.dataset.forslag);
+  if (k.dataset.handling === "endre") apneEditor(begrepById[k.dataset.begrep], "endre");
+  if (k.dataset.handling === "opprett") apneEditor(begrepFraForslag(f), "opprett", f);
+  if (k.dataset.handling === "avklaring") forslagsendring(f, "under_avklaring");
+  if (k.dataset.handling === "avslutt") forslagsendring(f, "avslutt");
+});
+
+// --- Fra forslag til begrep, etter mappingen i modellen -------------------------------
+function begrepFraForslag(f) {
+  const id = `${fv.begrep_ns}${slug(f.foreslatt_term)}`;
+  const b = { id, identifikator: [id] };
+  for (const m of fv.mapping) {
+    if (!m.overfores_til || f[m.slot] === undefined) continue;
+    const mal = skjemaFor(skjemaBegrep, m.overfores_til);
+    const verdi = erListe(mal) && !Array.isArray(f[m.slot]) ? [f[m.slot]] : f[m.slot];
+    settSti(b, m.overfores_til, verdi);
+  }
+  if (b.definisjon?.[0]) b.definisjon[0].forhold_til_kilde = b.definisjon[0].kilde ? "derived-from-source" : "self-composed";
+  b.fagansvarlig ??= meg;
+  b.kontaktpunkt = fv.standard.kontaktpunkt;
+  b.utgiver = fv.standard.utgiver;
+  b.status = "DRAFT";
+  b.opprettet = idag();
+  return b;
+}
+
+// --- Editor for et begrep ----------------------------------------------------------------
+const FELT = [
+  { id: "e-nb", sti: "/anbefalt_term/nb", navn: "Anbefalt term (bokmål)" },
+  { id: "e-nn", sti: "/anbefalt_term/nn", navn: "Anbefalt term (nynorsk)" },
+  { id: "e-en", sti: "/anbefalt_term/en", navn: "Anbefalt term (engelsk)" },
+  { id: "e-def-nb", sti: "/definisjon", navn: "Definisjon (bokmål)" },
+  { id: "e-kilde", sti: "/kilde", navn: "Kilde" },
+  { id: "e-status", sti: "/status", navn: "Status" },
+  { id: "e-eier", sti: "/fagansvarlig", navn: "Fagansvarlig" },
+];
+function feltFor(sti) {
+  if (sti.startsWith("/anbefalt_term") && !sti.split("/")[2]) return FELT[1];
+  if (sti.includes("/kilde")) return FELT[4];
+  return FELT.find((f) => sti === f.sti || sti.startsWith(f.sti + "/")) ?? null;
+}
+
+let tilstand = null;
+function apneEditor(b, modus, forslag = null) {
+  tilstand = { original: b, modus, forslag };
+  const defNb = b.definisjon?.find((d) => d.tekst?.nb) ?? {};
+  const defNn = b.definisjon?.find((d) => d.tekst?.nn) ?? {};
+  const andre = fv.begreper.filter((x) => x.id !== b.id);
+  const felt = (id, lbl, inn, beskr = "") => `<div class="ds-field"><label class="ds-label" for="${id}" data-weight="medium">${lbl}</label>${beskr ? `<div data-field="description">${beskr}</div>` : ""}${inn}<div class="ds-validation-message" data-field="validation" id="${id}-feil" hidden></div></div>`;
+  const tekstfelt = (id, v, type = "text") => `<input class="ds-input" id="${id}" type="${type}" value="${esc(v ?? "")}">`;
+  const omrade = (id, v) => `<textarea class="ds-input" id="${id}" rows="3">${esc(v ?? "")}</textarea>`;
+  const valg = (id, liste, valgt) => `<select class="ds-input" id="${id}">${liste.map(([v, t]) => `<option value="${esc(v)}" ${v === valgt ? "selected" : ""}>${esc(t)}</option>`).join("")}</select>`;
+  $("#dialog-tittel").textContent = modus === "opprett" ? `Opprett begrep fra forslaget «${forslag.foreslatt_term}»` : `Endre «${term(b)}»`;
+  const bruk = brukAv(b);
+  $("#dialog-innhold").innerHTML = `
+    ${modus === "opprett" ? `<div class="ds-alert" data-color="info"><p class="ds-paragraph" data-size="sm">Feltene er fylt ut fra forslaget etter mappingen i modellen. SKOS-AP-NO krever i tillegg nynorsk term og en definisjon. Begrepet får status «Utkast».</p></div>` : ""}
+    ${modus === "endre" && bruk.modeller.length ? `<div class="ds-alert" data-color="warning"><p class="ds-paragraph" data-size="sm">Begrepet brukes i ${bruk.modeller.map(esc).join(", ")}. Endrer du definisjonen, bør eierne av disse modellene få beskjed. Se <a class="ds-link" href="index.html#begreper">konsekvensene</a>.</p></div>` : ""}
+    <div id="dialog-feil" tabindex="-1"></div>
+    <div id="steg-skjema">
+      <fieldset class="ds-fieldset"><legend class="ds-label" data-weight="semibold">Termer</legend>
+        ${felt("e-nb", "Bokmål", tekstfelt("e-nb", b.anbefalt_term?.nb))}
+        ${felt("e-nn", "Nynorsk", tekstfelt("e-nn", b.anbefalt_term?.nn))}
+        ${felt("e-en", "Engelsk <span class=\"dempet liten\">(valgfritt)</span>", tekstfelt("e-en", b.anbefalt_term?.en))}
+        ${felt("e-tillatt", "Tillatte termer, bokmål <span class=\"dempet liten\">(valgfritt)</span>", tekstfelt("e-tillatt", (b.tillatt_term?.nb ?? []).join(", ")), "Skill med komma.")}
+      </fieldset>
+      <fieldset class="ds-fieldset"><legend class="ds-label" data-weight="semibold">Definisjon</legend>
+        ${felt("e-def-nb", "Definisjon (bokmål)", omrade("e-def-nb", defNb.tekst?.nb))}
+        ${felt("e-forhold", "Forhold til kilde", valg("e-forhold", kode.ForholdTilKilde.map((k) => [k.verdi, k.beskrivelse]), defNb.forhold_til_kilde ?? "self-composed"))}
+        ${felt("e-kilde", "Kilde <span class=\"dempet liten\">(valgfritt)</span>", tekstfelt("e-kilde", (defNb.kilde ?? [])[0], "url"))}
+        ${felt("e-def-nn", "Definisjon (nynorsk) <span class=\"dempet liten\">(valgfritt)</span>", omrade("e-def-nn", defNn.tekst?.nn))}
+      </fieldset>
+      <fieldset class="ds-fieldset"><legend class="ds-label" data-weight="semibold">Utfyllende</legend>
+        ${felt("e-merknad", "Merknad <span class=\"dempet liten\">(valgfritt)</span>", omrade("e-merknad", (b.merknad?.nb ?? [])[0]))}
+        ${felt("e-eksempel", "Eksempel <span class=\"dempet liten\">(valgfritt)</span>", omrade("e-eksempel", (b.eksempel?.nb ?? [])[0]))}
+        <fieldset class="ds-fieldset"><legend class="ds-label">Relatert til <span class="dempet liten">(valgfritt)</span></legend>
+          <div class="chip-valg">${andre.map((x) => `<label class="ds-chip"><input type="checkbox" name="e-relatert" value="${esc(x.id)}" ${(b.er_relatert_til ?? []).includes(x.id) ? "checked" : ""}>${esc(term(x))}</label>`).join("")}</div></fieldset>
+      </fieldset>
+      <fieldset class="ds-fieldset"><legend class="ds-label" data-weight="semibold">Forvaltning</legend>
+        ${felt("e-status", "Status", valg("e-status", Object.entries(begrepsstatus).map(([v, [t]]) => [v, t]), b.status))}
+        ${felt("e-eier", "Fagansvarlig", valg("e-eier", fv.fagansvarlige.map((p) => [p.id, `${p.navn} – ${p.seksjon}`]), b.fagansvarlig), "Velg en annen for å overføre ansvaret.")}
+      </fieldset>
+      <div class="handlinger"><button class="ds-button" data-variant="primary" type="button" id="se-over">Se over endringen</button>
+        <button class="ds-button" data-variant="secondary" type="submit" value="avbryt">Avbryt</button></div>
+    </div>
+    <div id="steg-oversikt" hidden></div>`;
+  $("#se-over").addEventListener("click", seOver);
+  $("#dialog").showModal();
+}
+
+function lesEditor() {
+  const o = kopi(tilstand.original);
+  const v = (id) => ($(`#${id}`)?.value ?? "").trim();
+  o.anbefalt_term = { nb: v("e-nb"), nn: v("e-nn"), en: v("e-en") };
+  const tillatt = v("e-tillatt").split(",").map((s) => s.trim()).filter(Boolean);
+  o.tillatt_term = { ...(o.tillatt_term ?? {}), nb: tillatt };
+  o.definisjon = o.definisjon ?? [];
+  let iNb = o.definisjon.findIndex((d) => d.tekst?.nb);
+  if (iNb < 0) { o.definisjon.unshift({ tekst: { nb: "" } }); iNb = 0; }
+  o.definisjon[iNb] = { ...o.definisjon[iNb], tekst: { nb: v("e-def-nb") }, forhold_til_kilde: v("e-forhold"), kilde: v("e-kilde") ? [v("e-kilde")] : [] };
+  let iNn = o.definisjon.findIndex((d) => d.tekst?.nn);
+  if (v("e-def-nn")) { if (iNn < 0) o.definisjon.push({ tekst: { nn: v("e-def-nn") } }); else o.definisjon[iNn].tekst = { nn: v("e-def-nn") }; }
+  else if (iNn >= 0) o.definisjon.splice(iNn, 1);
+  o.merknad = { ...(o.merknad ?? {}), nb: v("e-merknad") ? [v("e-merknad")] : [] };
+  o.eksempel = { ...(o.eksempel ?? {}), nb: v("e-eksempel") ? [v("e-eksempel")] : [] };
+  o.er_relatert_til = $$('input[name="e-relatert"]:checked').map((x) => x.value);
+  o.status = v("e-status");
+  o.fagansvarlig = v("e-eier");
+  if (tilstand.modus === "endre") o.sist_endret = idag();
+  return rens(o);
+}
+
+const fil = (hode, obj) => `${hode}\n${tilYaml(obj)}\n`;
+const begrepshode = (b) => `# Begrep: ${term(b)}\n# Valideres mot ForvaltetBegrep i modeller/tverrgaende/begrepsforvaltning.yaml`;
+const forslagshode = "# Begrepsforslag. Valideres mot Begrepsforslag i modeller/tverrgaende/begrepsforvaltning.yaml";
+
+function visFeil(feil) {
+  $$("#dialog .ds-input").forEach((i) => i.removeAttribute("aria-invalid"));
+  $$("#dialog .ds-validation-message").forEach((m) => (m.hidden = true));
+  for (const x of feil) {
+    const f = feltFor(x.sti); if (!f) continue;
+    $(`#${f.id}`)?.setAttribute("aria-invalid", "true");
+    const m = $(`#${f.id}-feil`); if (m) { m.textContent = `${f.navn} ${x.melding}.`; m.hidden = false; }
+  }
+  $("#dialog-feil").innerHTML = feiloppsummering(feil, (sti) => { const f = feltFor(sti); return f ? { id: f.id, navn: f.navn } : null; });
+  if (feil.length) $("#dialog-feil .ds-error-summary")?.focus();
+}
+
+function seOver() {
+  const ny = lesEditor();
+  const feil = valider(ny, skjemaBegrep);
+  visFeil(feil);
+  if (feil.length) return;
+  const { modus, original, forslag } = tilstand;
+  const filer = [];
+  const fnavn = filnavnFor(ny);
+  if (modus === "endre") {
+    filer.push({ fil: fnavn, yaml: fil(begrepshode(ny), ny), gammel: fil(begrepshode(original), rens(original)) });
+  } else {
+    if (fv.begreper.some((b) => b.id === ny.id)) return visFeil([{ sti: "/anbefalt_term/nb", melding: "finnes allerede som begrep. Velg en annen term" }]);
+    filer.push({ fil: fnavn, yaml: fil(begrepshode(ny), ny), gammel: "" });
+    const f2 = rens({ ...kopi(forslag), forslagsstatus: "opprettet", resultat_begrep: ny.id });
+    const ff = valider(f2, skjemaForslag);
+    if (ff.length) return visFeil(ff);
+    filer.push({ fil: forslag._fil, yaml: fil(forslagshode, f2), gammel: fil(forslagshode, rens(forslag)) });
+  }
+  const meg_ = personer[meg];
+  const oppsummering = modus === "endre"
+    ? `${meg_.navn} foreslår endringer i **${term(ny)}**.${ny.fagansvarlig !== original.fagansvarlig ? ` Ansvaret overføres til ${personer[ny.fagansvarlig].navn}.` : ""}`
+    : `${meg_.navn} oppretter **${term(ny)}** fra forslaget meldt inn av ${forslag.innmeldt_av.navn}. Begrepet får status «Utkast».`;
+  visOversikt(modus === "endre" ? `Endring av begrep: ${term(ny)}` : `Nytt begrep: ${term(ny)}`, modus === "endre" ? "Endring av begrep" : "Opprett begrep fra forslag", oppsummering, filer);
+}
+
+function visOversikt(tittel, type, oppsummering, filer) {
+  $("#steg-skjema") && ($("#steg-skjema").hidden = true);
+  const s = $("#steg-oversikt");
+  const tekst = issueTekst({ type, oppsummering, filer });
+  const lenke = issueLenke(config, tittel, tekst);
+  s.hidden = false;
+  s.innerHTML = `<div class="stabel">
+    <div class="ds-alert" data-color="success"><p class="ds-paragraph" data-size="sm">Endringen følger modellen. Når du sender den, blir den en pull request som godkjennes før den blir gjeldende.</p></div>
+    ${filer.map((f) => `<div class="stabel"><h3 class="ds-heading" data-size="2xs">${f.gammel ? "Endres" : "Ny fil"}: <span class="kode">${esc(f.fil)}</span></h3>${diffHtml(f.gammel, f.yaml)}</div>`).join("")}
+    ${lenke ? "" : `<div class="ds-alert" data-color="info"><p class="ds-paragraph" data-size="sm">Siden er ikke koblet til et GitHub-repo her, så du kan ikke sende direkte. Kopier teksten og lim den inn i et nytt issue.</p></div>`}
+    <div class="handlinger" id="oversikt-knapper">
+      ${lenke ? `<a class="ds-button" data-variant="primary" href="${esc(lenke)}" target="_blank" rel="noopener">Send til godkjenning i GitHub</a>` : ""}
+      ${$("#steg-skjema") ? `<button class="ds-button" data-variant="secondary" type="button" id="tilbake">Tilbake til skjemaet</button>` : ""}
+    </div></div>`;
+  $("#oversikt-knapper").appendChild(kopierKnapp(tekst, "Kopier innsendingen"));
+  $("#tilbake")?.addEventListener("click", () => { s.hidden = true; $("#steg-skjema").hidden = false; });
+}
+
+// --- Enklere endringer av et forslag ---------------------------------------------------
+function forslagsendring(f, handling) {
+  tilstand = { forslag: f };
+  $("#dialog-tittel").textContent = `«${f.foreslatt_term}»`;
+  const kandidater = (f.ligner_pa ?? []).concat(fv.begreper.map((b) => b.id)).filter((v, i, a) => a.indexOf(v) === i);
+  $("#dialog-innhold").innerHTML = `<div id="dialog-feil" tabindex="-1"></div><div id="steg-skjema" class="stabel">
+    ${handling === "avslutt" ? `<fieldset class="ds-fieldset"><legend class="ds-label" data-weight="semibold">Hva skal skje med forslaget?</legend>
+      <div class="ds-field"><input class="ds-input" type="radio" name="utfall" id="u-avvist" value="avvist" checked><label class="ds-label" for="u-avvist">Avvis. Vi trenger ikke begrepet.</label></div>
+      <div class="ds-field"><input class="ds-input" type="radio" name="utfall" id="u-duplikat" value="duplikat"><label class="ds-label" for="u-duplikat">Det finnes allerede som begrep</label></div></fieldset>
+      <div class="ds-field" id="dupl-felt" hidden><label class="ds-label" for="u-dupl">Hvilket begrep?</label>
+        <select class="ds-input" id="u-dupl">${kandidater.map((id) => `<option value="${esc(id)}">${esc(term(begrepById[id]))}</option>`).join("")}</select></div>`
+      : `<p class="ds-paragraph">Forslaget får status «Under avklaring», så innmelderen ser at noen jobber med det.</p>`}
+    <div class="ds-field"><label class="ds-label" for="u-kommentar" data-weight="medium">Kommentar ${handling === "avslutt" ? "" : '<span class="dempet liten">(valgfritt)</span>'}</label>
+      <div data-field="description">Vises for innmelderen.</div>
+      <textarea class="ds-input" id="u-kommentar" rows="3">${esc(f.behandlingskommentar ?? "")}</textarea>
+      <div class="ds-validation-message" data-field="validation" id="u-kommentar-feil" hidden></div></div>
+    <div class="handlinger"><button class="ds-button" data-variant="primary" type="button" id="se-over">Se over endringen</button>
+      <button class="ds-button" data-variant="secondary" type="submit" value="avbryt">Avbryt</button></div></div>
+    <div id="steg-oversikt" hidden></div>`;
+  $$('input[name="utfall"]').forEach((r) => r.addEventListener("change", () => ($("#dupl-felt").hidden = $('input[name="utfall"]:checked').value !== "duplikat")));
+  $("#se-over").addEventListener("click", () => {
+    const kommentar = $("#u-kommentar").value.trim();
+    const utfall = handling === "avslutt" ? $('input[name="utfall"]:checked').value : "under_avklaring";
+    if (utfall === "avvist" && !kommentar) {
+      $("#u-kommentar").setAttribute("aria-invalid", "true");
+      $("#u-kommentar-feil").textContent = "Skriv en begrunnelse, så innmelderen forstår hvorfor."; $("#u-kommentar-feil").hidden = false;
+      return;
+    }
+    const ny = rens({ ...kopi(f), forslagsstatus: utfall, behandlingskommentar: kommentar, duplikat_av: utfall === "duplikat" ? $("#u-dupl").value : undefined });
+    const feil = valider(ny, skjemaForslag);
+    if (feil.length) { $("#dialog-feil").innerHTML = feiloppsummering(feil, () => null); return; }
+    const tekster = { under_avklaring: "tar forslaget til avklaring", avvist: "avviser forslaget", duplikat: `markerer forslaget som duplikat av **${term(begrepById[ny.duplikat_av])}**` };
+    visOversikt(`Begrepsforslag: ${f.foreslatt_term} – ${forslagsstatus[utfall][0].toLowerCase()}`, "Behandling av begrepsforslag",
+      `${personer[meg].navn} ${tekster[utfall]} «${f.foreslatt_term}».${kommentar ? `\n\n> ${kommentar}` : ""}`,
+      [{ fil: f._fil, yaml: fil(forslagshode, ny), gammel: fil(forslagshode, rens(f)) }]);
+  });
+  $("#dialog").showModal();
+}
+</script>
+</body>
+</html>

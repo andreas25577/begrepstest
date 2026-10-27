@@ -1,0 +1,28 @@
+# Begrep: søknad
+# Valideres mot ForvaltetBegrep i modeller/tverrgaende/begrepsforvaltning.yaml
+id: https://example.org/begrep/soknad
+identifikator:
+- https://example.org/begrep/soknad
+anbefalt_term:
+  nb: søknad
+  nn: søknad
+tillatt_term:
+  nb:
+  - begjæring
+definisjon:
+- tekst:
+    nb: formell henvendelse der noen ber om et vedtak
+  forhold_til_kilde: self-composed
+- tekst:
+    nn: formell førespurnad der nokon ber om eit vedtak
+kontaktpunkt:
+- epost: mailto:begrep@example.org
+utgiver: https://data.brreg.no/enhetsregisteret/api/enheter/999000222
+status: CURRENT
+har_generisk_begrepsrelasjon:
+- overbegrep:
+  - https://example.org/begrep/henvendelse
+er_relatert_til:
+- https://example.org/begrep/vedtak
+fagansvarlig: fagansvarlig:kari-nordmann
+sist_endret: "2026-10-01"

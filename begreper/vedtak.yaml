@@ -1,0 +1,22 @@
+# Begrep: vedtak
+# Valideres mot ForvaltetBegrep i modeller/tverrgaende/begrepsforvaltning.yaml
+id: https://example.org/begrep/vedtak
+identifikator:
+- https://example.org/begrep/vedtak
+anbefalt_term:
+  nb: vedtak
+  nn: vedtak
+definisjon:
+- tekst:
+    nb: avgjørelse som er bestemmende for rettigheter eller plikter
+  forhold_til_kilde: self-composed
+- tekst:
+    nn: avgjerd som er bestemmande for rettar eller plikter
+kontaktpunkt:
+- epost: mailto:begrep@example.org
+utgiver: https://data.brreg.no/enhetsregisteret/api/enheter/999000222
+status: CURRENT
+er_relatert_til:
+- https://example.org/begrep/soknad
+fagansvarlig: fagansvarlig:kari-nordmann
+sist_endret: "2026-10-01"
