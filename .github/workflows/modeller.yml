@@ -1,0 +1,82 @@
+name: Sjekk og publiser modellene
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: modeller-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bygg:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # trengs for å sammenligne med main i pull requests
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Installer LinkML
+        run: pip install -r requirements.txt
+
+      - name: Valider, analyser og sjekk
+        run: bash scripts/bygg.sh
+
+      - name: Vis funn i oppsummeringen
+        if: always()
+        run: |
+          if [ -f _site/data/sjekk.json ]; then
+            python - <<'EOF' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          funn = json.load(open("_site/data/sjekk.json"))
+          print("## Forvaltningssjekker\n")
+          if not funn:
+              print("Ingen funn.")
+          ikon = {"feil": "❌", "advarsel": "⚠️", "merknad": "ℹ️"}
+          for f in funn:
+              print(f"- {ikon[f['niva']]} **{f['regel']}**: {f['melding']}")
+          EOF
+          fi
+
+      # Bare i pull requests: sammenlign med main og finn brytende endringer
+      - name: Finn endringer mot main
+        if: github.event_name == 'pull_request'
+        run: |
+          git worktree add ../main "origin/${{ github.base_ref }}"
+          # Eldre versjoner hadde alle begrepene i én fil
+          B=../main/begreper; [ -f ../main/begreper/begreper.yaml ] && B=../main/begreper/begreper.yaml
+          python scripts/analyser.py ../main/modeller "$B" ../main-avhengigheter.json
+          python scripts/endringer.py ../main-avhengigheter.json _site/data/avhengigheter.json endringer.md
+        # Rapporten skrives til oppsummeringen selv om sjekken feiler
+
+      - name: Vis endringsrapport
+        if: always() && github.event_name == 'pull_request'
+        run: '[ -f endringer.md ] && cat endringer.md >> "$GITHUB_STEP_SUMMARY" || true'
+
+      - uses: actions/upload-pages-artifact@v3
+        if: github.ref == 'refs/heads/main'
+        with:
+          path: _site
+
+  publiser:
+    if: github.ref == 'refs/heads/main'
+    needs: bygg
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
