@@ -1,0 +1,13 @@
+# Begrepsforslag. Valideres mot Begrepsforslag i modeller/tverrgaende/begrepsforvaltning.yaml
+id: forslag:2026-10-27-lonningspils
+foreslatt_term: lønningspils
+forklaring: fryd og gammen
+behov: teambuilding
+forslag_til_definisjon: pils inntatt etter lønning
+brukseksempel: la oss ta en lønningspils!
+foreslatt_fagansvarlig: fagansvarlig:ingrid-berg
+innmeldt_av:
+  navn: andreas
+  epost: mailto:andreas@test.no
+opprettet: "2026-10-27"
+forslagsstatus: innmeldt
