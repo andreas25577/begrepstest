@@ -1,0 +1,40 @@
+name: Innsending fra begrepssidene
+
+# Gjør issues laget av «Mine begreper» og «Meld inn begrep» om til pull requests.
+# Krever: Settings → Actions → General → «Allow GitHub Actions to create and approve pull requests».
+
+on:
+  issues:
+    types: [opened, edited]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: innmelding-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  til-pr:
+    # Bare issues fra sidene. Uttrykket evalueres av GitHub, ikke av skallet.
+    if: contains(github.event.issue.body, '<!-- begrepsforvaltning -->')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Installer LinkML
+        run: pip install -r requirements.txt
+
+      # Issuet leses fra hendelsesfilen inne i skriptet. Innholdet sendes aldri
+      # gjennom skallet, så ingen kan sette inn kommandoer via issueteksten.
+      - name: Valider og lag pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python scripts/issue_til_pr.py
